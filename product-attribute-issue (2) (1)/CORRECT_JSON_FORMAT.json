@@ -1,0 +1,116 @@
+[
+    {
+        "name": "تیشرت شلوارک کارنیوال",
+        "sku": "1521",
+        "description": "ست تیشرت شلوارک کارنیوال\n\nکیفیت فوق عالی جنس نخ پنبه",
+        "short_description": "تیشرت و شلوارک بچه",
+        "price": "865000",
+        "stock_quantity": 1,
+        "type": "variable",
+        "categories": [
+            {
+                "name": "آستین کوتاه",
+                "slug": "astine-kotah",
+                "parent_id": 0
+            }
+        ],
+        "image_urls": [
+            "https://example.com/image1.jpg",
+            "https://example.com/image2.jpg"
+        ],
+        "attributes": {
+            "color": {
+                "values": [
+                    {
+                        "name": "سرمه‌ای",
+                        "slug": "sarmhe-ai"
+                    },
+                    {
+                        "name": "طوسی",
+                        "slug": "toosi"
+                    },
+                    {
+                        "name": "قهوه‌ای",
+                        "slug": "ghahvhe-ai"
+                    },
+                    {
+                        "name": "یشمی",
+                        "slug": "yashmi"
+                    }
+                ],
+                "visible": true
+            },
+            "size": {
+                "values": [
+                    {
+                        "name": "40",
+                        "slug": "40"
+                    },
+                    {
+                        "name": "45",
+                        "slug": "45"
+                    },
+                    {
+                        "name": "50",
+                        "slug": "50"
+                    },
+                    {
+                        "name": "55",
+                        "slug": "55"
+                    },
+                    {
+                        "name": "60",
+                        "slug": "60"
+                    },
+                    {
+                        "name": "65",
+                        "slug": "65"
+                    }
+                ],
+                "visible": true
+            }
+        },
+        "variations": [
+            {
+                "sku": "1521-60-BLACK",
+                "price": "865000",
+                "stock_quantity": 10,
+                "attributes": {
+                    "color": "sarmhe-ai",
+                    "size": "60"
+                },
+                "image_url": "https://example.com/variation1.jpg"
+            },
+            {
+                "sku": "1521-65-BLACK",
+                "price": "865000",
+                "stock_quantity": 8,
+                "attributes": {
+                    "color": "sarmhe-ai",
+                    "size": "65"
+                },
+                "image_url": "https://example.com/variation1.jpg"
+            },
+            {
+                "sku": "1521-65-BROWN",
+                "price": "865000",
+                "stock_quantity": 5,
+                "attributes": {
+                    "color": "ghahvhe-ai",
+                    "size": "65"
+                },
+                "image_url": "https://example.com/variation2.jpg"
+            },
+            {
+                "sku": "1521-40-GREEN",
+                "price": "865000",
+                "stock_quantity": 12,
+                "attributes": {
+                    "color": "yashmi",
+                    "size": "40"
+                },
+                "image_url": "https://example.com/variation3.jpg"
+            }
+        ]
+    }
+]
