@@ -1,0 +1,467 @@
+{
+  "products": [
+    {
+      "name": "تیشرت شلوارک کارنیوال",
+      "sku": "1521",
+      "description": "ست تیشرت شلوارک کارنیوال\n\nکیفیت فوق عالی جنس نخ پنبه 100% طبیعی",
+      "short_description": "تیشرت و شلوارک بچه",
+      "price": "865000",
+      "stock_quantity": 35,
+      "type": "variable",
+      "categories": [
+        {
+          "id": 1,
+          "name": "آستین کوتاه",
+          "slug": "astine-kotah",
+          "parent_id": 0,
+          "description": "محصولات آستین کوتاه"
+        },
+        {
+          "id": 2,
+          "name": "بچگانه",
+          "slug": "bacheganeh",
+          "parent_id": 1,
+          "description": "محصولات بچگانه"
+        }
+      ],
+      "image_urls": [
+        "https://example.com/image1.jpg",
+        "https://example.com/image2.jpg",
+        "https://example.com/image3.jpg"
+      ],
+      "attributes": {
+        "color": {
+          "name": "رنگ",
+          "slug": "color",
+          "values": [
+            {
+              "name": "سرمه‌ای",
+              "slug": "sarmhe-ai"
+            },
+            {
+              "name": "طوسی",
+              "slug": "toosi"
+            },
+            {
+              "name": "قهوه‌ای",
+              "slug": "ghahvhe-ai"
+            },
+            {
+              "name": "یشمی",
+              "slug": "yashmi"
+            }
+          ],
+          "visible": true
+        },
+        "size": {
+          "name": "سایز",
+          "slug": "size",
+          "values": [
+            {
+              "name": "40",
+              "slug": "40"
+            },
+            {
+              "name": "45",
+              "slug": "45"
+            },
+            {
+              "name": "50",
+              "slug": "50"
+            },
+            {
+              "name": "55",
+              "slug": "55"
+            },
+            {
+              "name": "60",
+              "slug": "60"
+            },
+            {
+              "name": "65",
+              "slug": "65"
+            }
+          ],
+          "visible": true
+        }
+      },
+      "variations": [
+        {
+          "sku": "1521-40-DARK_BLUE",
+          "price": "865000",
+          "stock_quantity": 5,
+          "attributes": {
+            "color": "sarmhe-ai",
+            "size": "40"
+          },
+          "image_url": "https://example.com/variation-dark-blue.jpg"
+        },
+        {
+          "sku": "1521-45-DARK_BLUE",
+          "price": "865000",
+          "stock_quantity": 3,
+          "attributes": {
+            "color": "sarmhe-ai",
+            "size": "45"
+          },
+          "image_url": "https://example.com/variation-dark-blue.jpg"
+        },
+        {
+          "sku": "1521-50-DARK_BLUE",
+          "price": "865000",
+          "stock_quantity": 2,
+          "attributes": {
+            "color": "sarmhe-ai",
+            "size": "50"
+          },
+          "image_url": "https://example.com/variation-dark-blue.jpg"
+        },
+        {
+          "sku": "1521-55-DARK_BLUE",
+          "price": "865000",
+          "stock_quantity": 2,
+          "attributes": {
+            "color": "sarmhe-ai",
+            "size": "55"
+          },
+          "image_url": "https://example.com/variation-dark-blue.jpg"
+        },
+        {
+          "sku": "1521-60-DARK_BLUE",
+          "price": "865000",
+          "stock_quantity": 10,
+          "attributes": {
+            "color": "sarmhe-ai",
+            "size": "60"
+          },
+          "image_url": "https://example.com/variation-dark-blue.jpg"
+        },
+        {
+          "sku": "1521-65-DARK_BLUE",
+          "price": "865000",
+          "stock_quantity": 8,
+          "attributes": {
+            "color": "sarmhe-ai",
+            "size": "65"
+          },
+          "image_url": "https://example.com/variation-dark-blue.jpg"
+        },
+        {
+          "sku": "1521-40-GRAY",
+          "price": "865000",
+          "stock_quantity": 4,
+          "attributes": {
+            "color": "toosi",
+            "size": "40"
+          },
+          "image_url": "https://example.com/variation-gray.jpg"
+        },
+        {
+          "sku": "1521-50-GRAY",
+          "price": "865000",
+          "stock_quantity": 6,
+          "attributes": {
+            "color": "toosi",
+            "size": "50"
+          },
+          "image_url": "https://example.com/variation-gray.jpg"
+        },
+        {
+          "sku": "1521-65-BROWN",
+          "price": "865000",
+          "stock_quantity": 5,
+          "attributes": {
+            "color": "ghahvhe-ai",
+            "size": "65"
+          },
+          "image_url": "https://example.com/variation-brown.jpg"
+        },
+        {
+          "sku": "1521-40-GREEN",
+          "price": "865000",
+          "stock_quantity": 12,
+          "attributes": {
+            "color": "yashmi",
+            "size": "40"
+          },
+          "image_url": "https://example.com/variation-green.jpg"
+        }
+      ]
+    },
+    {
+      "name": "کفش ورزشی",
+      "sku": "2050",
+      "description": "کفش ورزشی با کیفیت بالا و جنس چرم طبیعی",
+      "short_description": "کفش ورزشی مردانه و زنانه",
+      "price": "450000",
+      "stock_quantity": 28,
+      "type": "variable",
+      "categories": [
+        {
+          "id": 3,
+          "name": "کفش‌ها",
+          "slug": "kaffha",
+          "parent_id": 0,
+          "description": "انواع کفش"
+        },
+        {
+          "id": 4,
+          "name": "ورزشی",
+          "slug": "varzeshi",
+          "parent_id": 3,
+          "description": "کفش‌های ورزشی"
+        }
+      ],
+      "image_urls": [
+        "https://example.com/shoe1.jpg",
+        "https://example.com/shoe2.jpg"
+      ],
+      "attributes": {
+        "color": {
+          "name": "رنگ",
+          "slug": "color",
+          "values": [
+            {
+              "name": "سیاه",
+              "slug": "siyah"
+            },
+            {
+              "name": "سفید",
+              "slug": "sefid"
+            }
+          ],
+          "visible": true
+        },
+        "size": {
+          "name": "سایز",
+          "slug": "size",
+          "values": [
+            {
+              "name": "35",
+              "slug": "35"
+            },
+            {
+              "name": "36",
+              "slug": "36"
+            },
+            {
+              "name": "37",
+              "slug": "37"
+            },
+            {
+              "name": "38",
+              "slug": "38"
+            },
+            {
+              "name": "39",
+              "slug": "39"
+            },
+            {
+              "name": "40",
+              "slug": "40"
+            },
+            {
+              "name": "41",
+              "slug": "41"
+            },
+            {
+              "name": "42",
+              "slug": "42"
+            }
+          ],
+          "visible": true
+        }
+      },
+      "variations": [
+        {
+          "sku": "2050-35-BLACK",
+          "price": "450000",
+          "stock_quantity": 2,
+          "attributes": {
+            "color": "siyah",
+            "size": "35"
+          },
+          "image_url": "https://example.com/shoe-black.jpg"
+        },
+        {
+          "sku": "2050-40-BLACK",
+          "price": "450000",
+          "stock_quantity": 5,
+          "attributes": {
+            "color": "siyah",
+            "size": "40"
+          },
+          "image_url": "https://example.com/shoe-black.jpg"
+        },
+        {
+          "sku": "2050-42-BLACK",
+          "price": "450000",
+          "stock_quantity": 3,
+          "attributes": {
+            "color": "siyah",
+            "size": "42"
+          },
+          "image_url": "https://example.com/shoe-black.jpg"
+        },
+        {
+          "sku": "2050-36-WHITE",
+          "price": "450000",
+          "stock_quantity": 4,
+          "attributes": {
+            "color": "sefid",
+            "size": "36"
+          },
+          "image_url": "https://example.com/shoe-white.jpg"
+        },
+        {
+          "sku": "2050-40-WHITE",
+          "price": "450000",
+          "stock_quantity": 7,
+          "attributes": {
+            "color": "sefid",
+            "size": "40"
+          },
+          "image_url": "https://example.com/shoe-white.jpg"
+        },
+        {
+          "sku": "2050-41-WHITE",
+          "price": "450000",
+          "stock_quantity": 6,
+          "attributes": {
+            "color": "sefid",
+            "size": "41"
+          },
+          "image_url": "https://example.com/shoe-white.jpg"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "آستین کوتاه",
+      "slug": "astine-kotah",
+      "parent_id": 0,
+      "description": "محصولات آستین کوتاه"
+    },
+    {
+      "id": 2,
+      "name": "بچگانه",
+      "slug": "bacheganeh",
+      "parent_id": 1,
+      "description": "محصولات بچگانه"
+    },
+    {
+      "id": 3,
+      "name": "کفش‌ها",
+      "slug": "kaffha",
+      "parent_id": 0,
+      "description": "انواع کفش"
+    },
+    {
+      "id": 4,
+      "name": "ورزشی",
+      "slug": "varzeshi",
+      "parent_id": 3,
+      "description": "کفش‌های ورزشی"
+    }
+  ],
+  "attributes": [
+    {
+      "name": "رنگ",
+      "slug": "color",
+      "values": [
+        {
+          "name": "سرمه‌ای",
+          "slug": "sarmhe-ai"
+        },
+        {
+          "name": "طوسی",
+          "slug": "toosi"
+        },
+        {
+          "name": "قهوه‌ای",
+          "slug": "ghahvhe-ai"
+        },
+        {
+          "name": "یشمی",
+          "slug": "yashmi"
+        },
+        {
+          "name": "سیاه",
+          "slug": "siyah"
+        },
+        {
+          "name": "سفید",
+          "slug": "sefid"
+        }
+      ],
+      "visible": true
+    },
+    {
+      "name": "سایز",
+      "slug": "size",
+      "values": [
+        {
+          "name": "35",
+          "slug": "35"
+        },
+        {
+          "name": "36",
+          "slug": "36"
+        },
+        {
+          "name": "37",
+          "slug": "37"
+        },
+        {
+          "name": "38",
+          "slug": "38"
+        },
+        {
+          "name": "39",
+          "slug": "39"
+        },
+        {
+          "name": "40",
+          "slug": "40"
+        },
+        {
+          "name": "41",
+          "slug": "41"
+        },
+        {
+          "name": "42",
+          "slug": "42"
+        },
+        {
+          "name": "45",
+          "slug": "45"
+        },
+        {
+          "name": "50",
+          "slug": "50"
+        },
+        {
+          "name": "55",
+          "slug": "55"
+        },
+        {
+          "name": "60",
+          "slug": "60"
+        },
+        {
+          "name": "65",
+          "slug": "65"
+        }
+      ],
+      "visible": true
+    }
+  ],
+  "metadata": {
+    "exportDate": "2026-06-22T10:30:00.000Z",
+    "sourceUrl": "https://source-site.com",
+    "totalProducts": 2,
+    "totalCategories": 4
+  }
+}
