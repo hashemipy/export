@@ -1,0 +1,158 @@
+[
+  {
+    "id": 1,
+    "name": "تی‌شرت سفید",
+    "sku": "TSHIRT-WHITE",
+    "description": "تی‌شرت کتان 100% با کیفیت عالی",
+    "short_description": "تی‌شرت سفید برای روزمره",
+    "price": "125000",
+    "stock_quantity": 50,
+    "category": "لباس",
+    "type": "simple",
+    "images": [
+      "https://example.com/tshirt-white-1.jpg",
+      "https://example.com/tshirt-white-2.jpg"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "شلوار جین",
+    "sku": "JEANS-BLUE",
+    "description": "شلوار جین دنیم اصل با تناسب راحت",
+    "short_description": "شلوار جین آبی",
+    "price": "350000",
+    "stock_quantity": 30,
+    "category": "لباس",
+    "type": "simple",
+    "images": [
+      "https://example.com/jeans-blue.jpg"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "پیراهن پلنگی",
+    "sku": "SHIRT-LEOPARD",
+    "description": "پیراهن با طرح پلنگی شیک و خاص",
+    "short_description": "پیراهن الگوی پلنگی",
+    "price": "280000",
+    "stock_quantity": 25,
+    "category": "لباس",
+    "type": "variable",
+    "attributes": {
+      "رنگ": ["قرمز", "سیاه", "سفید"],
+      "سایز": ["S", "M", "L", "XL", "XXL"]
+    },
+    "variations": [
+      {
+        "variation_id": 31,
+        "sku": "SHIRT-LEOPARD-RED-S",
+        "price": "280000",
+        "stock_quantity": 5,
+        "attributes": {
+          "رنگ": "قرمز",
+          "سایز": "S"
+        },
+        "image": "https://example.com/shirt-leopard-red-s.jpg"
+      },
+      {
+        "variation_id": 32,
+        "sku": "SHIRT-LEOPARD-RED-M",
+        "price": "280000",
+        "stock_quantity": 8,
+        "attributes": {
+          "رنگ": "قرمز",
+          "سایز": "M"
+        },
+        "image": "https://example.com/shirt-leopard-red-m.jpg"
+      },
+      {
+        "variation_id": 33,
+        "sku": "SHIRT-LEOPARD-BLACK-S",
+        "price": "280000",
+        "stock_quantity": 10,
+        "attributes": {
+          "رنگ": "سیاه",
+          "سایز": "S"
+        },
+        "image": "https://example.com/shirt-leopard-black-s.jpg"
+      },
+      {
+        "variation_id": 34,
+        "sku": "SHIRT-LEOPARD-BLACK-L",
+        "price": "280000",
+        "stock_quantity": 6,
+        "attributes": {
+          "رنگ": "سیاه",
+          "سایز": "L"
+        },
+        "image": "https://example.com/shirt-leopard-black-l.jpg"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "کفش ورزشی",
+    "sku": "SNEAKER-RUN",
+    "description": "کفش ورزشی راحت برای دویدن و پیاده‌روی",
+    "short_description": "کفش اسنیکر",
+    "price": "450000",
+    "stock_quantity": 20,
+    "category": "کفش",
+    "type": "variable",
+    "attributes": {
+      "رنگ": ["سیاه", "سفید", "آبی"],
+      "سایز": ["36", "37", "38", "39", "40", "41", "42", "43"]
+    },
+    "variations": [
+      {
+        "variation_id": 41,
+        "sku": "SNEAKER-RUN-BLACK-40",
+        "price": "450000",
+        "stock_quantity": 8,
+        "attributes": {
+          "رنگ": "سیاه",
+          "سایز": "40"
+        },
+        "image": "https://example.com/sneaker-black-40.jpg"
+      },
+      {
+        "variation_id": 42,
+        "sku": "SNEAKER-RUN-WHITE-40",
+        "price": "450000",
+        "stock_quantity": 5,
+        "attributes": {
+          "رنگ": "سفید",
+          "سایز": "40"
+        },
+        "image": "https://example.com/sneaker-white-40.jpg"
+      },
+      {
+        "variation_id": 43,
+        "sku": "SNEAKER-RUN-BLUE-42",
+        "price": "450000",
+        "stock_quantity": 3,
+        "attributes": {
+          "رنگ": "آبی",
+          "سایز": "42"
+        },
+        "image": "https://example.com/sneaker-blue-42.jpg"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "کیف دستی",
+    "sku": "BAG-LEATHER",
+    "description": "کیف دستی چرم اصل با دوام بالا",
+    "short_description": "کیف چرمی مشکی",
+    "price": "890000",
+    "stock_quantity": 12,
+    "category": "اکسسوری",
+    "type": "simple",
+    "images": [
+      "https://example.com/bag-leather-1.jpg",
+      "https://example.com/bag-leather-2.jpg",
+      "https://example.com/bag-leather-3.jpg"
+    ]
+  }
+]

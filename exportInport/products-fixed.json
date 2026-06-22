@@ -1,0 +1,226 @@
+[
+    {
+        "name": "تیشرت شلوارک قلب",
+        "sku": "1523",
+        "description": "این ست باهات حرف میزنه انقدر معرکست😊\n\nتیشرت شلوارک Love\n\n💯بدون آبرفت\n\n💯با ضمانت صددرصد پارچه\nلی کاغذی شسته شده\nچاپ پفک\n\nسایز45,50,55,60\n\nمناسب ۴تا۱۱سال\n\n 3رنگ\n\nق یمت معرکه فقط ۱۱۸۵ت\nهزینه ارسال ۸۵ت\n\nزمان ارسال ۵ تیر ماه",
+        "short_description": "ست تیشرت شلوارک قلب",
+        "price": "1185000",
+        "stock_quantity": 20,
+        "type": "variable",
+        "categories": [
+            {
+                "name": "آستین کوتاه",
+                "slug": "astin-kotah",
+                "parent_id": 0
+            }
+        ],
+        "image_urls": [
+            "https://khoshtipkocholo.ir/wp-content/uploads/2026/06/IMG_20260620_194906_553.jpg",
+            "https://khoshtipkocholo.ir/wp-content/uploads/2026/06/IMG_20260620_194856_424.jpg",
+            "https://khoshtipkocholo.ir/wp-content/uploads/2026/06/IMG_20260620_194902_051.jpg",
+            "https://khoshtipkocholo.ir/wp-content/uploads/2026/06/IMG_20260620_194918_040.jpg"
+        ],
+        "attributes": {
+            "color": {
+                "values": [
+                    {
+                        "name": "سفید",
+                        "slug": "white"
+                    },
+                    {
+                        "name": "صورتی",
+                        "slug": "pink"
+                    },
+                    {
+                        "name": "مشکی",
+                        "slug": "black"
+                    }
+                ],
+                "visible": true
+            },
+            "size": {
+                "values": [
+                    {
+                        "name": "45",
+                        "slug": "45"
+                    },
+                    {
+                        "name": "50",
+                        "slug": "50"
+                    },
+                    {
+                        "name": "55",
+                        "slug": "55"
+                    },
+                    {
+                        "name": "60",
+                        "slug": "60"
+                    }
+                ],
+                "visible": true
+            }
+        },
+        "variations": [
+            {
+                "sku": "1523-white-45",
+                "price": "1185000",
+                "stock_quantity": 5,
+                "attributes": {
+                    "color": "سفید",
+                    "size": "45"
+                },
+                "image_url": null
+            },
+            {
+                "sku": "1523-white-50",
+                "price": "1185000",
+                "stock_quantity": 5,
+                "attributes": {
+                    "color": "سفید",
+                    "size": "50"
+                },
+                "image_url": null
+            },
+            {
+                "sku": "1523-pink-45",
+                "price": "1185000",
+                "stock_quantity": 5,
+                "attributes": {
+                    "color": "صورتی",
+                    "size": "45"
+                },
+                "image_url": null
+            },
+            {
+                "sku": "1523-pink-50",
+                "price": "1185000",
+                "stock_quantity": 5,
+                "attributes": {
+                    "color": "صورتی",
+                    "size": "50"
+                },
+                "image_url": null
+            },
+            {
+                "sku": "1523-black-45",
+                "price": "1185000",
+                "stock_quantity": 5,
+                "attributes": {
+                    "color": "مشکی",
+                    "size": "45"
+                },
+                "image_url": null
+            }
+        ]
+    },
+    {
+        "name": "تیشرت شلوارک کلاه",
+        "sku": "1522",
+        "description": "این ست معرکه سری قبل ۲ روز تموم شد\nدوباره شارژ شد",
+        "short_description": "ست تیشرت شلوارک کلاه",
+        "price": "875000",
+        "stock_quantity": 20,
+        "type": "variable",
+        "categories": [
+            {
+                "name": "آستین کوتاه",
+                "slug": "astin-kotah",
+                "parent_id": 0
+            }
+        ],
+        "image_urls": [
+            "https://khoshtipkocholo.ir/wp-content/uploads/2026/06/IMG_20260620_201957_909.jpg",
+            "https://khoshtipkocholo.ir/wp-content/uploads/2026/06/IMG_20260620_201958_334.jpg"
+        ],
+        "attributes": {
+            "color": {
+                "values": [
+                    {
+                        "name": "آجری",
+                        "slug": "brick"
+                    },
+                    {
+                        "name": "طوسی",
+                        "slug": "gray"
+                    },
+                    {
+                        "name": "کرم",
+                        "slug": "cream"
+                    },
+                    {
+                        "name": "نسکافه ای",
+                        "slug": "coffee"
+                    }
+                ],
+                "visible": true
+            },
+            "size": {
+                "values": [
+                    {
+                        "name": "40",
+                        "slug": "40"
+                    },
+                    {
+                        "name": "45",
+                        "slug": "45"
+                    },
+                    {
+                        "name": "50",
+                        "slug": "50"
+                    },
+                    {
+                        "name": "55",
+                        "slug": "55"
+                    },
+                    {
+                        "name": "60",
+                        "slug": "60"
+                    }
+                ],
+                "visible": true
+            }
+        },
+        "variations": [
+            {
+                "sku": "1522-brick-40",
+                "price": "875000",
+                "stock_quantity": 4,
+                "attributes": {
+                    "color": "آجری",
+                    "size": "40"
+                },
+                "image_url": null
+            },
+            {
+                "sku": "1522-gray-45",
+                "price": "875000",
+                "stock_quantity": 4,
+                "attributes": {
+                    "color": "طوسی",
+                    "size": "45"
+                },
+                "image_url": null
+            },
+            {
+                "sku": "1522-cream-50",
+                "price": "875000",
+                "stock_quantity": 4,
+                "attributes": {
+                    "color": "کرم",
+                    "size": "50"
+                },
+                "image_url": null
+            },
+            {
+                "sku": "1522-coffee-55",
+                "price": "875000",
+                "stock_quantity": 4,
+                "attributes": {
+                    "color": "نسکافه ای",
+                    "size": "55"
+                },
+                "image_url": null
+            }
+        ]
+    }
+]
