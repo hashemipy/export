@@ -91,13 +91,14 @@ class PIE_API {
 
         // تعیین endpoint فعلی از REQUEST_URI
         $request_uri   = $_SERVER['REQUEST_URI'] ?? '';
-        $is_stock_sync = (
-            strpos($request_uri, '/update-stock') !== false ||
-            strpos($request_uri, '/list-products') !== false
-        );
 
-        // endpoint های انتقال محصول فقط برای سایت ۲ مجاز هستند
-        // endpoint های sync موجودی برای هر دو سایت مجاز هستند
+        // endpoint های /update-stock، /list-products و /register-map برای هر دو سایت مجاز هستند
+        // بقیه endpoint ها (انتقال محصول) فقط برای سایت ۲ مجاز هستند
+        $is_stock_sync = (
+            strpos($request_uri, '/update-stock')  !== false ||
+            strpos($request_uri, '/list-products') !== false ||
+            strpos($request_uri, '/register-map')  !== false
+        );
         if (!$is_stock_sync && $config['site_role'] !== 'site2') {
             error_log("[PIE] Receive endpoint: site_role is not site2 (got: {$config['site_role']})");
             return new WP_Error('wrong_site', 'This endpoint is only available on Site 2', ['status' => 403]);

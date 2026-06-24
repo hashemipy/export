@@ -77,7 +77,8 @@ class PIE_StockSync {
         // AJAX handlers
         add_action('wp_ajax_pie_stock_get_map',      [$this, 'ajax_get_map']);
         add_action('wp_ajax_pie_stock_add_map',      [$this, 'ajax_add_map']);
-        add_action('wp_ajax_pie_stock_delete_map',   [$this, 'ajax_delete_map']);
+        add_action('wp_ajax_pie_stock_delete_map',       [$this, 'ajax_delete_map']);
+        add_action('wp_ajax_pie_stock_delete_product_maps', [$this, 'ajax_delete_product_maps']);
         add_action('wp_ajax_pie_stock_force_sync',   [$this, 'ajax_force_sync']);
         add_action('wp_ajax_pie_stock_fetch_remote', [$this, 'ajax_fetch_remote_products']);
         add_action('wp_ajax_pie_get_variations',     [$this, 'ajax_get_variations']);
@@ -673,6 +674,47 @@ class PIE_StockSync {
     }
 
     /**
+     * حذف تمام نگاشت‌های یک محصول (حذف گروهی)
+     */
+    public function ajax_delete_product_maps() {
+        check_ajax_referer('pie_nonce', 'nonce');
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('دسترسی ندارید');
+        }
+
+        $s1_product_id = intval($_POST['s1_product_id'] ?? 0);
+        if (!$s1_product_id) {
+            wp_send_json_error('s1_product_id نامعتبر');
+        }
+
+        global $wpdb;
+        $table_map   = $wpdb->prefix . self::TABLE_MAP;
+        $table_queue = $wpdb->prefix . self::TABLE_QUEUE;
+
+        // پیدا کردن همه map_id های این محصول
+        $map_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT id FROM {$table_map} WHERE s1_product_id = %d",
+            $s1_product_id
+        ));
+
+        if (empty($map_ids)) {
+            wp_send_json_error('نگاشتی برای این محصول یافت نشد');
+        }
+
+        $ids_placeholder = implode(',', array_map('intval', $map_ids));
+
+        // حذف از صف
+        $wpdb->query("DELETE FROM {$table_queue} WHERE map_id IN ({$ids_placeholder})");
+        // حذف از جدول map
+        $wpdb->query("DELETE FROM {$table_map} WHERE id IN ({$ids_placeholder})");
+
+        wp_send_json_success([
+            'message' => count($map_ids) . ' نگاشت حذف شد',
+            'deleted' => count($map_ids),
+        ]);
+    }
+
+    /**
      * force sync دستی یک ردیف
      */
     public function ajax_force_sync() {
@@ -888,17 +930,23 @@ class PIE_StockSync {
                         html += `
                         <div style="border:1px solid #e0e0e0;border-radius:5px;margin-bottom:8px;overflow:hidden;">
                             <!-- هدر محصول - کلیک برای باز/بسته شدن -->
-                            <div class="pie-group-header"
-                                 data-target="${groupId}"
-                                 style="display:flex;justify-content:space-between;align-items:center;
-                                        padding:12px 16px;background:#f8f9fa;cursor:pointer;
-                                        border-bottom:1px solid #e0e0e0;user-select:none;">
-                                <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;
+                                        padding:12px 16px;background:#f8f9fa;
+                                        border-bottom:1px solid #e0e0e0;">
+                                <div class="pie-group-header" data-target="${groupId}"
+                                     style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;flex:1;">
                                     <span class="pie-chevron" style="display:inline-block;transition:transform 0.2s;font-size:14px;color:#666;">&#9654;</span>
                                     <strong style="font-size:14px;">${g.name}</strong>
                                     ${pendingBadge}
+                                    <span style="font-size:12px;color:#888;">${rowCount} نگاشت</span>
                                 </div>
-                                <span style="font-size:12px;color:#888;">${rowCount} نگاشت</span>
+                                <button class="button button-small pie-delete-product-btn"
+                                        data-pid="${pid}"
+                                        style="color:#c62828;border-color:#c62828;white-space:nowrap;">
+                                    حذف همه
+                                </button>
+                            </div>
+                                <span style="font-size:12px;color:#888;">${rowCount} ن��اشت</span>
                             </div>
 
                             <!-- محتوای متغیرها -->
@@ -1052,11 +1100,28 @@ class PIE_StockSync {
                 });
             });
 
-            // --- حذف mapping ---
+            // --- حذف یک mapping ---
             $(document).on('click', '.pie-delete-map-btn', function() {
                 if (!confirm('این نگاشت و صف مرتبط حذف شود؟')) return;
                 const id = $(this).data('id');
                 $.post(ajaxurl, { action: 'pie_stock_delete_map', map_id: id, nonce }, function(res) {
+                    if (res.success) {
+                        loadMapTable();
+                    } else {
+                        alert('خطا: ' + res.data);
+                    }
+                });
+            });
+
+            // --- حذف همه نگاشت‌های یک محصول ---
+            $(document).on('click', '.pie-delete-product-btn', function(e) {
+                e.stopPropagation(); // از باز/بسته شدن accordion جلوگیری کن
+                const pid  = $(this).data('pid');
+                const name = $(this).closest('div').find('strong').first().text().trim();
+                if (!confirm('تمام نگاشت‌های "' + name + '" حذف شود؟')) return;
+                const $btn = $(this).prop('disabled', true).text('در حال حذف...');
+                $.post(ajaxurl, { action: 'pie_stock_delete_product_maps', s1_product_id: pid, nonce }, function(res) {
+                    $btn.prop('disabled', false).text('حذف همه');
                     if (res.success) {
                         loadMapTable();
                     } else {
