@@ -95,18 +95,29 @@ class PIE_Transfer {
                     $stock_sync = PIE_StockSync::get_instance();
 
                     if ($product->is_type('variable') && !empty($s2_variation_ids)) {
-                        // محصول متغیر: mapping برای هر variation بر اساس SKU
+                        // محصول متغیر: mapping برای هر variation
+                        // ابتدا با id_ (دقیق‌ترین روش)، اگر نبود با SKU (fallback)
                         foreach ($product->get_children() as $s1_var_id) {
                             $s1_variation = wc_get_product($s1_var_id);
                             if (!$s1_variation) continue;
 
-                            $var_sku  = $s1_variation->get_sku();
-                            $s2_var_id = $s2_variation_ids[$var_sku] ?? null;
+                            // روش ۱: کلید دقیق id_<s1_variation_id>
+                            $s2_var_id = $s2_variation_ids['id_' . $s1_var_id] ?? null;
+
+                            // روش ۲ (fallback): تطبیق بر اساس SKU
+                            if (!$s2_var_id) {
+                                $var_sku   = $s1_variation->get_sku();
+                                $s2_var_id = ($var_sku && isset($s2_variation_ids[$var_sku]))
+                                    ? $s2_variation_ids[$var_sku]
+                                    : null;
+                            }
 
                             if ($s2_var_id) {
                                 $attrs = [];
                                 foreach ($s1_variation->get_variation_attributes() as $attr => $val) {
-                                    $attrs[] = wc_attribute_label(str_replace('attribute_', '', $attr)) . ':' . $val;
+                                    $decoded_val  = urldecode($val);
+                                    $decoded_attr = urldecode(str_replace('attribute_', '', $attr));
+                                    $attrs[] = wc_attribute_label($decoded_attr) . ':' . $decoded_val;
                                 }
                                 $stock_sync->register_mapping(
                                     $product_id,

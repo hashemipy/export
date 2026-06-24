@@ -882,10 +882,12 @@ class Product_Import_Export {
                     }
                     
                     $var_data = [
-                        'sku' => $variation->get_sku() ?: '',
-                        'price' => $variation->get_price() ? (string)$variation->get_price() : '0',
+                        '_s1_id'         => $variation->get_id(), // ID سایت ۱ — برای auto-mapping دقیق
+                        'sku'            => $variation->get_sku() ?: '',
+                        'price'          => $variation->get_price() ? (string)$variation->get_price() : '0',
+                        'regular_price'  => $variation->get_regular_price() ? (string)$variation->get_regular_price() : '0',
                         'stock_quantity' => (int)($variation->get_stock_quantity() ?: 0),
-                        'attributes' => []
+                        'attributes'     => [],
                     ];
                     
                     foreach ($variation->get_attributes() as $attr_key => $attr_value) {
@@ -1278,11 +1280,17 @@ class Product_Import_Export {
                             $var_created = $this->create_variation($post_id, $variation_data, $attr_ids);
                             if ($var_created) {
                                 $result['variations']++;
-                                // ذخیره map از SKU → s2_variation_id برای auto-mapping
-                                $v_sku = $var_created['sku'] ?? '';
-                                $v_id  = $var_created['id']  ?? 0;
-                                if ($v_sku && $v_id) {
-                                    $result['variation_ids'][$v_sku] = $v_id;
+                                $v_id    = $var_created['id']   ?? 0;
+                                $v_s1_id = $var_created['s1_id'] ?? 0; // ID متغیر در سایت ۱
+                                $v_sku   = $var_created['sku']  ?? '';
+                                if ($v_id) {
+                                    if ($v_s1_id) {
+                                        // کلید اصلی: s1_variation_id — دقیق و بدون اشتباه
+                                        $result['variation_ids']['id_' . $v_s1_id] = $v_id;
+                                    } elseif ($v_sku) {
+                                        // fallback: SKU (برای محصولاتی که بدون _s1_id ارسال شده‌اند)
+                                        $result['variation_ids'][$v_sku] = $v_id;
+                                    }
                                 }
                             }
                         }
@@ -1541,11 +1549,14 @@ class Product_Import_Export {
                 }
             }
             
+            // s1_id را از داده ورودی بخوان (اگر سایت ۱ ارسال کرده باشد)
+            $s1_id = intval($variation_data['_s1_id'] ?? 0);
+
             $var_id = $variation->save();
 
             if (!is_wp_error($var_id) && $var_id) {
-                // برگرداندن آرایه‌ای شامل ID و SKU (برای auto-mapping)
-                return ['id' => $var_id, 'sku' => $sku];
+                // برگرداندن آرایه‌ای شامل ID، SKU و s1_id (برای auto-mapping دقیق)
+                return ['id' => $var_id, 'sku' => $sku, 's1_id' => $s1_id];
             }
             return false;
         } catch (Exception $e) {
