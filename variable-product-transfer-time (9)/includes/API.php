@@ -72,6 +72,13 @@ class PIE_API {
             'callback'            => [$this, 'list_products'],
             'permission_callback' => [$this, 'check_auth_for_receive'],
         ]);
+
+        // Endpoint: ثبت mapping معکوس روی سایت مقابل (برای sync دو طرفه)
+        register_rest_route('pie/v1', '/register-map', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'register_map_remote'],
+            'permission_callback' => [$this, 'check_auth_for_receive'],
+        ]);
     }
     
     /**
@@ -444,7 +451,10 @@ class PIE_API {
 
                     $attrs = [];
                     foreach ($variation->get_variation_attributes() as $attr => $val) {
-                        $attrs[] = wc_attribute_label(str_replace('attribute_', '', $attr)) . ':' . $val;
+                        // urldecode برای نمایش صحیح مقادیر فارسی در سایت مقابل
+                        $decoded_val  = urldecode($val);
+                        $decoded_attr = urldecode(str_replace('attribute_', '', $attr));
+                        $attrs[] = wc_attribute_label($decoded_attr) . ':' . $decoded_val;
                     }
 
                     $entry['variations'][] = [
@@ -459,6 +469,42 @@ class PIE_API {
         }
 
         return new WP_REST_Response(['products' => $result], 200);
+    }
+
+    /**
+     * ثبت mapping معکوس روی سایت مقابل
+     * وقتی سایت ۱ یک نگاشت ثبت می‌کند، همین endpoint روی سایت ۲ فراخوانی می‌شود
+     * تا سایت ۲ هم بتواند تغییرات موجودی خودش را به سایت ۱ push کند
+     */
+    public function register_map_remote(WP_REST_Request $request) {
+        $body = $request->get_json_params();
+
+        $s1_product_id   = intval($body['s1_product_id']   ?? 0);
+        $s2_product_id   = intval($body['s2_product_id']   ?? 0);
+        $s1_variation_id = intval($body['s1_variation_id'] ?? 0) ?: null;
+        $s2_variation_id = intval($body['s2_variation_id'] ?? 0) ?: null;
+        $product_name    = sanitize_text_field($body['product_name']    ?? '');
+        $variation_attrs = sanitize_text_field($body['variation_attrs'] ?? '');
+
+        if (!$s1_product_id || !$s2_product_id) {
+            return new WP_REST_Response(['success' => false, 'message' => 'product_id الزامی است'], 400);
+        }
+
+        $stock_sync = PIE_StockSync::get_instance();
+        $map_id     = $stock_sync->register_mapping(
+            $s1_product_id,
+            $s2_product_id,
+            $s1_variation_id,
+            $s2_variation_id,
+            $product_name,
+            $variation_attrs
+        );
+
+        return new WP_REST_Response([
+            'success' => true,
+            'map_id'  => $map_id,
+            'message' => 'mapping معکوس ثبت شد',
+        ], 200);
     }
 
     /**

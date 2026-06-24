@@ -612,7 +612,43 @@ class PIE_StockSync {
 
         $id = $this->register_mapping($s1_product_id, $s2_product_id, $s1_variation_id, $s2_variation_id, $product_name, $variation_attrs);
 
-        wp_send_json_success(['id' => $id, 'message' => 'mapping ثبت شد']);
+        // ارسال mapping معکوس به سایت ۲ تا sync دو طرفه کار کند
+        // سایت ۲ باید جدول خودش را داشته باشد تا بتواند تغییرات موجودیش را push کند
+        $config = $this->settings->get_config();
+        $remote_url = rtrim($config['remote_site_url'], '/');
+        $api_key    = $config['remote_api_key'];
+        $api_secret = $config['remote_api_secret'];
+        $remote_push_error = '';
+
+        if (!empty($remote_url) && !empty($api_key)) {
+            $endpoint = $remote_url . '/wp-json/pie/v1/register-map';
+            $response = wp_remote_post($endpoint, [
+                'timeout' => 15,
+                'headers' => [
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Basic ' . base64_encode("{$api_key}:{$api_secret}"),
+                ],
+                'body' => wp_json_encode([
+                    's1_product_id'   => $s1_product_id,
+                    's2_product_id'   => $s2_product_id,
+                    's1_variation_id' => $s1_variation_id,
+                    's2_variation_id' => $s2_variation_id,
+                    'product_name'    => $product_name,
+                    'variation_attrs' => $variation_attrs,
+                ]),
+            ]);
+
+            if (is_wp_error($response)) {
+                $remote_push_error = ' (هشدار: ثبت در سایت ۲ ناموفق بود: ' . $response->get_error_message() . ')';
+            } else {
+                $code = wp_remote_retrieve_response_code($response);
+                if ($code !== 200) {
+                    $remote_push_error = ' (هشدار: ثبت در سایت ۲ ناموفق بود: HTTP ' . $code . ')';
+                }
+            }
+        }
+
+        wp_send_json_success(['id' => $id, 'message' => 'mapping ثبت شد' . $remote_push_error]);
     }
 
     /**
