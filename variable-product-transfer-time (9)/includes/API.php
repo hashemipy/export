@@ -345,7 +345,7 @@ class PIE_API {
      *
      * منطق conflict resolution هنگام قطعی هاست:
      *  - اگر موجودی فعلی این سایت کمتر از مقدار دریافتی باشد
-     *    مقدار کمتر را برگردان تا سایت فرستنده بتواند خودش را هم کاهش دهد
+     *    مقدار کمتر را برگردان تا سایت فرستنده بتو��ند خودش را هم کاهش دهد
      */
     public function update_stock(WP_REST_Request $request) {
         $body = $request->get_json_params();
@@ -486,9 +486,25 @@ class PIE_API {
         $s2_variation_id = intval($body['s2_variation_id'] ?? 0) ?: null;
         $product_name    = sanitize_text_field($body['product_name']    ?? '');
         $variation_attrs = sanitize_text_field($body['variation_attrs'] ?? '');
+        $s1_site_url     = esc_url_raw($body['s1_site_url'] ?? '');
 
         if (!$s1_product_id || !$s2_product_id) {
             return new WP_REST_Response(['success' => false, 'message' => 'product_id الزامی است'], 400);
+        }
+
+        // اگر s1_site_url ارسال شده، آن را در تنظیمات سایت ۲ ذخیره کن
+        // تا سایت ۲ بداند به کجا push کند
+        if ($s1_site_url) {
+            $settings = PIE_Settings::get_instance();
+            $config   = $settings->get_config();
+
+            // فقط اگر remote_site_url هنوز تنظیم نشده، آن را ذخیره کن
+            // (تا تنظیم دستی کاربر را override نکنیم)
+            if (empty($config['remote_site_url'])) {
+                $config['remote_site_url'] = $s1_site_url;
+                update_option('pie_site_config', $config); // همان option_key که Settings.php استفاده می‌کند
+                error_log("[PIE] register_map_remote: remote_site_url auto-set to {$s1_site_url}");
+            }
         }
 
         $stock_sync = PIE_StockSync::get_instance();

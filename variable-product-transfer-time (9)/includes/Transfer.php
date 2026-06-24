@@ -94,6 +94,9 @@ class PIE_Transfer {
                 if ($s2_product_id) {
                     $stock_sync = PIE_StockSync::get_instance();
 
+                    // لیست mapping هایی که باید به سایت ۲ هم ارسال شوند
+                    $mappings_to_push = [];
+
                     if ($product->is_type('variable') && !empty($s2_variation_ids)) {
                         // محصول متغیر: mapping برای هر variation
                         // ابتدا با id_ (دقیق‌ترین روش)، اگر نبود با SKU (fallback)
@@ -119,14 +122,23 @@ class PIE_Transfer {
                                     $decoded_attr = urldecode(str_replace('attribute_', '', $attr));
                                     $attrs[] = wc_attribute_label($decoded_attr) . ':' . $decoded_val;
                                 }
+                                $attr_str = implode('|', $attrs);
                                 $stock_sync->register_mapping(
                                     $product_id,
                                     $s2_product_id,
                                     $s1_var_id,
                                     $s2_var_id,
                                     $product->get_name(),
-                                    implode('|', $attrs)
+                                    $attr_str
                                 );
+                                $mappings_to_push[] = [
+                                    's1_product_id'   => $product_id,
+                                    's2_product_id'   => $s2_product_id,
+                                    's1_variation_id' => $s1_var_id,
+                                    's2_variation_id' => $s2_var_id,
+                                    'product_name'    => $product->get_name(),
+                                    'variation_attrs' => $attr_str,
+                                ];
                             }
                         }
                     } else {
@@ -138,6 +150,47 @@ class PIE_Transfer {
                             null,
                             $product->get_name()
                         );
+                        $mappings_to_push[] = [
+                            's1_product_id'   => $product_id,
+                            's2_product_id'   => $s2_product_id,
+                            's1_variation_id' => null,
+                            's2_variation_id' => null,
+                            'product_name'    => $product->get_name(),
+                            'variation_attrs' => '',
+                        ];
+                    }
+
+                    // ارسال mapping های معکوس به سایت ۲
+                    // سایت ۲ باید همین mapping ها را در جدول خودش داشته باشد
+                    // تا وقتی موجودی در سایت ۲ تغییر کرد بتواند به سایت ۱ push کند
+                    if (!empty($mappings_to_push)) {
+                        $remote_url = rtrim($config['remote_site_url'], '/');
+                        $api_key    = $config['remote_api_key'];
+                        $api_secret = $config['remote_api_secret'];
+
+                        // آدرس و credentials سایت ۱ را به سایت ۲ می‌دهیم
+                        // سایت ۲ این اطلاعات را ذخیره می‌کند تا بتواند push کند
+                        $s1_site_url = get_site_url();
+
+                        // کلیدهایی که سایت ۲ باید با آن‌ها به سایت ۱ احراز هویت کند
+                        // اگر سایت ۱ کلیدی برای سایت ۲ صادر کرده، آن را ارسال کن
+                        // (این همان remote_api_key و remote_api_secret سایت ۱ نیست -
+                        //  بلکه کلیدهایی است که سایت ۱ باید در تنظیماتش داشته باشد تا سایت ۲ با آن push کند)
+                        // سایت ۲ باید از کلید خودش برای احراز هویت در سایت ۱ استفاده کند -
+                        // این کار باید توسط ادمین در تنظیمات انجام شود
+                        // ما فقط remote_site_url را خودکار تنظیم می‌کنیم
+
+                        foreach ($mappings_to_push as $map_data) {
+                            $map_data['s1_site_url'] = $s1_site_url;
+                            wp_remote_post($remote_url . '/wp-json/pie/v1/register-map', [
+                                'timeout' => 10,
+                                'headers' => [
+                                    'Content-Type'  => 'application/json',
+                                    'Authorization' => 'Basic ' . base64_encode("{$api_key}:{$api_secret}"),
+                                ],
+                                'body' => wp_json_encode($map_data),
+                            ]);
+                        }
                     }
                 }
             } else {
