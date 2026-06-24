@@ -850,49 +850,117 @@ class PIE_StockSync {
         jQuery(function($) {
             const nonce = '<?php echo wp_create_nonce('pie_nonce'); ?>';
 
-            // --- بارگذاری جدول mapping ---
+            // --- بارگذاری جدول mapping (گروه‌بندی شده بر اساس محصول) ---
             function loadMapTable() {
                 $('#pie-map-table-wrapper').html('<p style="color:#999;">در حال بارگذاری...</p>');
                 $.post(ajaxurl, { action: 'pie_stock_get_map', nonce }, function(res) {
-                    if (!res.success) { $('#pie-map-table-wrapper').html('<p style="color:red;">خطا در بارگذاری</p>'); return; }
+                    if (!res.success) {
+                        $('#pie-map-table-wrapper').html('<p style="color:red;">خطا در بارگذاری</p>');
+                        return;
+                    }
                     const rows = res.data.rows;
                     if (!rows.length) {
                         $('#pie-map-table-wrapper').html('<p style="color:#999;">هیچ نگاشتی ثبت نشده است.</p>');
                         return;
                     }
-                    let html = `<table class="wp-list-table widefat fixed striped" style="border-collapse:collapse;">
-                        <thead><tr>
-                            <th>محصول</th>
-                            <th>متغیر</th>
-                            <th>سایت ۱ ID</th>
-                            <th>سایت ۲ ID</th>
-                            <th>آخرین sync</th>
-                            <th>موجودی sync</th>
-                            <th>صف</th>
-                            <th>عملیات</th>
-                        </tr></thead><tbody>`;
+
+                    // گروه‌بندی ردیف‌ها بر اساس s1_product_id
+                    const groups = {};
                     rows.forEach(function(r) {
-                        const isVar = r.s1_variation_id;
-                        const syncAt = r.last_sync_at ? r.last_sync_at.substring(0,16) : '-';
-                        const pendingBadge = r.pending_count > 0
-                            ? `<span style="background:#ff9800;color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;">${r.pending_count}</span>`
-                            : '<span style="color:#999;font-size:11px;">-</span>';
-                        html += `<tr>
-                            <td>${r.product_name || '-'}</td>
-                            <td style="font-size:12px;color:#555;">${r.variation_attrs || (isVar ? 'متغیر' : 'ساده')}</td>
-                            <td>${r.s1_product_id}${isVar ? ' / ' + r.s1_variation_id : ''}</td>
-                            <td>${r.s2_product_id}${r.s2_variation_id ? ' / ' + r.s2_variation_id : ''}</td>
-                            <td style="font-size:12px;">${syncAt}</td>
-                            <td style="text-align:center;">${r.last_synced_stock !== null ? r.last_synced_stock : '-'}</td>
-                            <td style="text-align:center;">${pendingBadge}</td>
-                            <td>
-                                <button class="button button-small pie-force-sync-btn" data-id="${r.id}" style="margin-left:5px;">sync</button>
-                                <button class="button button-small pie-delete-map-btn" data-id="${r.id}" style="color:#c62828;border-color:#c62828;">حذف</button>
-                            </td>
-                        </tr>`;
+                        const key = r.s1_product_id;
+                        if (!groups[key]) {
+                            groups[key] = { name: r.product_name || ('محصول #' + key), rows: [] };
+                        }
+                        groups[key].rows.push(r);
                     });
-                    html += '</tbody></table>';
+
+                    let html = '';
+                    Object.keys(groups).forEach(function(pid) {
+                        const g        = groups[pid];
+                        const rowCount = g.rows.length;
+                        // جمع صف‌های pending این محصول
+                        const totalPending = g.rows.reduce((s, r) => s + (parseInt(r.pending_count) || 0), 0);
+                        const pendingBadge = totalPending > 0
+                            ? `<span style="background:#ff9800;color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-right:8px;">${totalPending} در صف</span>`
+                            : '';
+                        const groupId = 'pie-group-' + pid;
+
+                        html += `
+                        <div style="border:1px solid #e0e0e0;border-radius:5px;margin-bottom:8px;overflow:hidden;">
+                            <!-- هدر محصول - کلیک برای باز/بسته شدن -->
+                            <div class="pie-group-header"
+                                 data-target="${groupId}"
+                                 style="display:flex;justify-content:space-between;align-items:center;
+                                        padding:12px 16px;background:#f8f9fa;cursor:pointer;
+                                        border-bottom:1px solid #e0e0e0;user-select:none;">
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <span class="pie-chevron" style="display:inline-block;transition:transform 0.2s;font-size:14px;color:#666;">&#9654;</span>
+                                    <strong style="font-size:14px;">${g.name}</strong>
+                                    ${pendingBadge}
+                                </div>
+                                <span style="font-size:12px;color:#888;">${rowCount} نگاشت</span>
+                            </div>
+
+                            <!-- محتوای متغیرها -->
+                            <div id="${groupId}" style="display:none;">
+                                <table class="wp-list-table widefat" style="border-collapse:collapse;border:0;margin:0;">
+                                    <thead>
+                                        <tr style="background:#fafafa;">
+                                            <th style="padding:8px 16px;font-size:12px;font-weight:600;color:#555;">متغیر</th>
+                                            <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;">سایت ۱ ID</th>
+                                            <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;">سایت ۲ ID</th>
+                                            <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;">آخرین sync</th>
+                                            <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;text-align:center;">موجودی</th>
+                                            <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;text-align:center;">صف</th>
+                                            <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;text-align:center;">عملیات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+
+                        g.rows.forEach(function(r) {
+                            const isVar       = r.s1_variation_id;
+                            const syncAt      = r.last_sync_at ? r.last_sync_at.substring(0,16) : '-';
+                            const varLabel    = r.variation_attrs || (isVar ? 'متغیر #' + r.s1_variation_id : 'ساده');
+                            const s1Id        = r.s1_product_id + (isVar ? ' / ' + r.s1_variation_id : '');
+                            const s2Id        = r.s2_product_id + (r.s2_variation_id ? ' / ' + r.s2_variation_id : '');
+                            const rowPending  = parseInt(r.pending_count) || 0;
+                            const rowBadge    = rowPending > 0
+                                ? `<span style="background:#ff9800;color:#fff;padding:2px 6px;border-radius:10px;font-size:11px;">${rowPending}</span>`
+                                : '<span style="color:#ccc;font-size:11px;">-</span>';
+
+                            html += `
+                                        <tr style="border-top:1px solid #f0f0f0;">
+                                            <td style="padding:9px 16px;font-size:13px;">${varLabel}</td>
+                                            <td style="padding:9px 12px;font-size:12px;color:#555;">${s1Id}</td>
+                                            <td style="padding:9px 12px;font-size:12px;color:#555;">${s2Id}</td>
+                                            <td style="padding:9px 12px;font-size:12px;color:#777;">${syncAt}</td>
+                                            <td style="padding:9px 12px;text-align:center;font-size:12px;">${r.last_synced_stock !== null ? r.last_synced_stock : '-'}</td>
+                                            <td style="padding:9px 12px;text-align:center;">${rowBadge}</td>
+                                            <td style="padding:9px 12px;text-align:center;white-space:nowrap;">
+                                                <button class="button button-small pie-force-sync-btn" data-id="${r.id}" style="margin-left:4px;">sync</button>
+                                                <button class="button button-small pie-delete-map-btn" data-id="${r.id}" style="color:#c62828;border-color:#c62828;">حذف</button>
+                                            </td>
+                                        </tr>`;
+                        });
+
+                        html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                    });
+
                     $('#pie-map-table-wrapper').html(html);
+
+                    // رویداد toggle برای هر هدر
+                    $(document).on('click', '.pie-group-header', function() {
+                        const targetId = $(this).data('target');
+                        const $content = $('#' + targetId);
+                        const $chevron = $(this).find('.pie-chevron');
+                        const isOpen   = $content.is(':visible');
+                        $content.slideToggle(150);
+                        $chevron.css('transform', isOpen ? 'rotate(0deg)' : 'rotate(90deg)');
+                    });
                 });
             }
             loadMapTable();
