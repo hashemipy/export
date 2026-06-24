@@ -75,17 +75,27 @@ class PIE_API {
     }
     
     /**
-     * تأیید دسترسی برای دریافت محصول
+     * تأیید دسترسی برای دریافت محصول یا موجودی
+     * - /receive-product و /preview-product و /confirm-product : فقط سایت ۲
+     * - /update-stock و /list-products : هر دو سایت (sync دو طرفه)
      */
     public function check_auth_for_receive() {
         $config = $this->settings->get_config();
-        
-        // اگر Site 2 نباشد endpoint باید معطل بماند
-        if ($config['site_role'] !== 'site2') {
+
+        // تعیین endpoint فعلی از REQUEST_URI
+        $request_uri   = $_SERVER['REQUEST_URI'] ?? '';
+        $is_stock_sync = (
+            strpos($request_uri, '/update-stock') !== false ||
+            strpos($request_uri, '/list-products') !== false
+        );
+
+        // endpoint های انتقال محصول فقط برای سایت ۲ مجاز هستند
+        // endpoint های sync موجودی برای هر دو سایت مجاز هستند
+        if (!$is_stock_sync && $config['site_role'] !== 'site2') {
             error_log("[PIE] Receive endpoint: site_role is not site2 (got: {$config['site_role']})");
             return new WP_Error('wrong_site', 'This endpoint is only available on Site 2', ['status' => 403]);
         }
-        
+
         // بررسی Basic Auth header
         $auth_header = isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '';
         
@@ -336,9 +346,26 @@ class PIE_API {
         $variation_id = intval($body['variation_id'] ?? 0) ?: null;
         $new_stock    = isset($body['new_stock']) ? intval($body['new_stock']) : null;
         $map_id       = intval($body['map_id']       ?? 0);
+        $direction    = sanitize_text_field($body['direction'] ?? '');
 
         if (!$product_id || $new_stock === null) {
             return new WP_REST_Response(['success' => false, 'message' => 'product_id و new_stock الزامی هستند'], 400);
+        }
+
+        // جلوگیری از Ping-Pong: اگر map قفل است، این تغییر خودمان بوده - نادیده بگیر
+        if ($map_id) {
+            global $wpdb;
+            $table_map = $wpdb->prefix . 'pie_stock_map';
+            $map_row   = $wpdb->get_row($wpdb->prepare(
+                "SELECT is_locked, locked_until FROM {$table_map} WHERE id = %d LIMIT 1",
+                $map_id
+            ));
+            if ($map_row && $map_row->is_locked && strtotime($map_row->locked_until) > time()) {
+                return new WP_REST_Response([
+                    'success' => true,
+                    'message' => 'locked: تغییر ناشی از sync خودمان بود - نادیده گرفته شد',
+                ], 200);
+            }
         }
 
         // بارگذاری محصول صحیح (variation یا ساده)
@@ -360,6 +387,16 @@ class PIE_API {
                 'message'       => 'conflict: موجودی local کمتر است',
                 'current_stock' => $current_stock,
             ], 409);
+        }
+
+        // قفل map قبل از آپدیت تا hook on_stock_changed دوباره push نکند
+        if ($map_id) {
+            global $wpdb;
+            $table_map = $wpdb->prefix . 'pie_stock_map';
+            $wpdb->update($table_map, [
+                'is_locked'    => 1,
+                'locked_until' => date('Y-m-d H:i:s', time() + 30),
+            ], ['id' => $map_id]);
         }
 
         // اعمال موجودی جدید

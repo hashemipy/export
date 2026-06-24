@@ -601,7 +601,10 @@ class PIE_StockSync {
             if ($variation) {
                 $attrs = [];
                 foreach ($variation->get_variation_attributes() as $attr => $val) {
-                    $attrs[] = wc_attribute_label(str_replace('attribute_', '', $attr)) . ':' . $val;
+                    // urldecode برای ذخیره صحیح مقادیر فارسی در دیتابیس
+                    $decoded_val  = urldecode($val);
+                    $decoded_attr = urldecode(str_replace('attribute_', '', $attr));
+                    $attrs[] = wc_attribute_label($decoded_attr) . ':' . $decoded_val;
                 }
                 $variation_attrs = implode('|', $attrs);
             }
@@ -985,7 +988,10 @@ class PIE_StockSync {
 
             $attrs = [];
             foreach ($variation->get_variation_attributes() as $attr => $val) {
-                $attrs[] = wc_attribute_label(str_replace('attribute_', '', $attr)) . ':' . $val;
+                // urldecode برای نمایش صحیح مقادیر فارسی (مثل %d8%a2%d8%a8%db%8c → آبی)
+                $decoded_val  = urldecode($val);
+                $decoded_attr = urldecode(str_replace('attribute_', '', $attr));
+                $attrs[] = wc_attribute_label($decoded_attr) . ':' . $decoded_val;
             }
 
             $variations[] = [
