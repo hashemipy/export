@@ -923,12 +923,13 @@ class PIE_StockSync {
         global $wpdb;
         $table_map   = $wpdb->prefix . self::TABLE_MAP;
         $table_queue = $wpdb->prefix . self::TABLE_QUEUE;
+        $postmeta_table = $wpdb->prefix . 'postmeta';
 
         $rows = $wpdb->get_results(
             "SELECT m.*,
                     (SELECT COUNT(*) FROM {$table_queue} q WHERE q.map_id=m.id AND q.status IN ('pending','failed')) as pending_count
              FROM {$table_map} m
-             ORDER BY m.product_name ASC, m.variation_attrs ASC"
+             ORDER BY CAST(IFNULL((SELECT meta_value FROM {$postmeta_table} pm WHERE pm.post_id=m.s1_product_id AND pm.meta_key='_sku' LIMIT 1), 0) AS UNSIGNED) DESC"
         );
 
         wp_send_json_success(['rows' => $rows]);
@@ -1357,7 +1358,7 @@ class PIE_StockSync {
                     Object.keys(groups).forEach(function(pid) {
                         const g        = groups[pid];
                         const rowCount = g.rows.length;
-                        // مجموع صف‌های pending این محصول
+                        // مجموع صف‌های pending این ��حصول
                         const totalPending = g.rows.reduce((s, r) => s + (parseInt(r.pending_count) || 0), 0);
                         const pendingBadge = totalPending > 0
                             ? `<span style="background:#ff9800;color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-right:8px;">${totalPending} در صف</span>`
