@@ -117,6 +117,13 @@ class PIE_API {
             'callback'            => [$this, 'process_queue_loopback_delayed'],
             'permission_callback' => '__return_true',
         ]);
+
+        // Endpoint: حذف متقابل mapping (از سایت مقابل فراخوانی می‌شود)
+        register_rest_route('pie/v1', '/delete-map-remote', [
+            'methods'             => 'POST',
+            'callback'            => [$this, 'delete_map_remote'],
+            'permission_callback' => [$this, 'check_auth_for_receive'],
+        ]);
     }
 
     /**
@@ -764,6 +771,67 @@ class PIE_API {
         }
 
         return new WP_REST_Response(['success' => false, 'message' => 'post_type نامعتبر: ' . $post->post_type], 400);
+    }
+
+    /**
+     * حذف متقابل mapping (فراخوانی شده از سایت مقابل)
+     * وقتی user یک mapping را از سایت ۱ حذف می‌کند، این endpoint روی سایت ۲
+     * فراخوانی می‌شود تا جفت معکوس (s2 -> s1) هم حذف شود
+     */
+    public function delete_map_remote(WP_REST_Request $request) {
+        $body = $request->get_json_params();
+        
+        $s1_product_id    = intval($body['s1_product_id'] ?? 0);
+        $s1_variation_id  = intval($body['s1_variation_id'] ?? 0);
+        $s2_product_id    = intval($body['s2_product_id'] ?? 0);
+        $s2_variation_id  = intval($body['s2_variation_id'] ?? 0);
+        
+        if (!$s1_product_id || !$s2_product_id) {
+            return new WP_REST_Response(
+                ['success' => false, 'message' => 'product IDs ناقص هستند'],
+                400
+            );
+        }
+        
+        global $wpdb;
+        $table_map = $wpdb->prefix . PIE_StockSync::TABLE_MAP;
+        $table_queue = $wpdb->prefix . PIE_StockSync::TABLE_QUEUE;
+        
+        // جستجو برای mapping که باید حذف شود
+        // اگر variation_id تنظیم شده، match کردن دقیق‌تر
+        if ($s2_variation_id) {
+            $map_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$table_map} WHERE s1_product_id=%d AND s1_variation_id=%d AND s2_product_id=%d AND s2_variation_id=%d",
+                $s1_product_id, $s1_variation_id, $s2_product_id, $s2_variation_id
+            ));
+        } else {
+            $map_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM {$table_map} WHERE s1_product_id=%d AND s1_variation_id IS NULL AND s2_product_id=%d AND s2_variation_id IS NULL",
+                $s1_product_id, $s2_product_id
+            ));
+        }
+        
+        if (!$map_id) {
+            // نگاشت یافت نشد - اما خطا نیست (ممکن است قبلاً حذف شده باشد)
+            return new WP_REST_Response(
+                ['success' => true, 'message' => 'نگاشت یافت نشد (قبلاً حذف شده؟)'],
+                200
+            );
+        }
+        
+        // حذف نگاشت
+        $wpdb->delete($table_map, ['id' => $map_id]);
+        $wpdb->delete($table_queue, ['map_id' => $map_id]);
+        
+        $this->logging->log('api_delete', 'success', 
+            "نگاشت حذف شد (درخواست متقابل از سایت مقابل): map_id={$map_id}",
+            ['map_id' => $map_id, 's1_product_id' => $s1_product_id]
+        );
+        
+        return new WP_REST_Response(
+            ['success' => true, 'message' => 'نگاشت حذف شد'],
+            200
+        );
     }
 
     /**

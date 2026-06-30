@@ -55,6 +55,8 @@ class PIE_Transfer {
         
         $product_ids = isset($_POST['product_ids']) ? explode(',', sanitize_text_field($_POST['product_ids'])) : [];
         $product_ids = array_map('intval', $product_ids);
+        // فیلتر کردن صفر‌ها و تطبیق ترتیب (در صورتی که ترتیب تغییر کرده باشد)
+        $product_ids = array_values(array_filter($product_ids));
         
         if (empty($product_ids)) {
             wp_send_json_error('هیچ محصولی انتخاب نشده است');
@@ -64,6 +66,7 @@ class PIE_Transfer {
         $failed = 0;
         $errors = [];
         
+        // پردازش محصولات به ترتیب دقیق انتخاب
         foreach ($product_ids as $product_id) {
             $product = wc_get_product($product_id);
             if (!$product) {

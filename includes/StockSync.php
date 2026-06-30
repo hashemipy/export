@@ -95,6 +95,7 @@ class PIE_StockSync {
         add_action('wp_ajax_pie_stock_get_map',      [$this, 'ajax_get_map']);
         add_action('wp_ajax_pie_stock_add_map',      [$this, 'ajax_add_map']);
         add_action('wp_ajax_pie_stock_delete_map',       [$this, 'ajax_delete_map']);
+        add_action('wp_ajax_pie_stock_delete_selected_maps', [$this, 'ajax_delete_selected_maps']);
         add_action('wp_ajax_pie_stock_delete_product_maps', [$this, 'ajax_delete_product_maps']);
         add_action('wp_ajax_pie_stock_force_sync',   [$this, 'ajax_force_sync']);
         add_action('wp_ajax_pie_stock_fetch_remote', [$this, 'ajax_fetch_remote_products']);
@@ -1038,7 +1039,7 @@ class PIE_StockSync {
     }
 
     /**
-     * حذف یک ردیف از mapping
+     * حذف یک ردیف از mapping (با حذف متقابل در سایت مقابل)
      */
     public function ajax_delete_map() {
         check_ajax_referer('pie_nonce', 'nonce');
@@ -1052,10 +1053,100 @@ class PIE_StockSync {
         }
 
         global $wpdb;
-        $wpdb->delete($wpdb->prefix . self::TABLE_MAP,   ['id' => $id]);
+        
+        // دریافت اطلاعات mapping قبل از حذف
+        $table_map = $wpdb->prefix . self::TABLE_MAP;
+        $map = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_map} WHERE id = %d", $id));
+        
+        if (!$map) {
+            wp_send_json_error('نگاشت یافت نشد');
+        }
+        
+        // حذف local mapping
+        $wpdb->delete($table_map, ['id' => $id]);
         $wpdb->delete($wpdb->prefix . self::TABLE_QUEUE, ['map_id' => $id]);
-
+        
+        // حذف متقابل در سایت مقابل
+        $this->trigger_remote_delete_map($map);
+        
         wp_send_json_success(['message' => 'mapping حذف شد']);
+    }
+    
+    /**
+     * حذف چندین نگاشت انتخاب‌شده
+     */
+    public function ajax_delete_selected_maps() {
+        check_ajax_referer('pie_nonce', 'nonce');
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('دسترسی ندارید');
+        }
+
+        $map_ids = isset($_POST['map_ids']) ? array_map('intval', (array)$_POST['map_ids']) : [];
+        if (empty($map_ids)) {
+            wp_send_json_error('نگاشتی انتخاب نشده');
+        }
+
+        global $wpdb;
+        $table_map = $wpdb->prefix . self::TABLE_MAP;
+        $table_queue = $wpdb->prefix . self::TABLE_QUEUE;
+        
+        $deleted_count = 0;
+        foreach ($map_ids as $map_id) {
+            // دریافت اطلاعات قبل از حذف
+            $map = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_map} WHERE id = %d", $map_id));
+            if (!$map) {
+                continue;
+            }
+            
+            // حذف local
+            $wpdb->delete($table_map, ['id' => $map_id]);
+            $wpdb->delete($table_queue, ['map_id' => $map_id]);
+            
+            // حذف متقابل در سایت مقابل
+            $this->trigger_remote_delete_map($map);
+            
+            $deleted_count++;
+        }
+        
+        wp_send_json_success([
+            'message' => "{$deleted_count} نگاشت حذف شد",
+            'deleted' => $deleted_count
+        ]);
+    }
+    
+    /**
+     * فراخوانی API سایت مقابل برای حذف متقابل
+     */
+    private function trigger_remote_delete_map($map) {
+        $config = $this->settings->get_config();
+        
+        // فقط اگر تنظیمات API موجود بود
+        if (empty($config['remote_site_url']) || empty($config['remote_api_key'])) {
+            return;
+        }
+        
+        $delete_endpoint = rtrim($config['remote_site_url'], '/') . '/wp-json/pie/v1/delete-map-remote';
+        
+        $delete_data = [
+            's1_product_id'   => intval($map->s1_product_id),
+            's1_variation_id' => intval($map->s1_variation_id) ?: null,
+            's2_product_id'   => intval($map->s2_product_id),
+            's2_variation_id' => intval($map->s2_variation_id) ?: null,
+        ];
+        
+        $response = wp_remote_post($delete_endpoint, [
+            'timeout'     => 15,
+            'headers'     => [
+                'Authorization' => 'Basic ' . base64_encode('woocommerce:' . $config['remote_api_key']),
+                'Content-Type'  => 'application/json',
+            ],
+            'body' => json_encode($delete_data),
+            'sslverify' => false, // برای محیط توسعه
+        ]);
+        
+        if (is_wp_error($response)) {
+            error_log("[PIE] حذف متقابل ناموفق: " . $response->get_error_message());
+        }
     }
 
     /**
@@ -1265,7 +1356,10 @@ class PIE_StockSync {
             <div style="border:1px solid #ddd;padding:20px;border-radius:5px;background:#fff;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
                     <h2 style="margin:0;">جدول نگاشت‌ها</h2>
-                    <button id="pie-reload-map-btn" class="button">بارگذاری مجدد</button>
+                    <div>
+                        <button id="pie-delete-selected-btn" class="button button-small" style="color:#c62828;border-color:#c62828;margin-right:10px;display:none;">حذف انتخاب‌شده‌ها</button>
+                        <button id="pie-reload-map-btn" class="button">بارگذاری مجدد</button>
+                    </div>
                 </div>
                 <div id="pie-map-table-wrapper">
                     <p style="color:#999;">در حال بارگذاری...</p>
@@ -1357,7 +1451,7 @@ class PIE_StockSync {
                     Object.keys(groups).forEach(function(pid) {
                         const g        = groups[pid];
                         const rowCount = g.rows.length;
-                        // مجموع صف‌های pending این محصول
+                        // مجموع صف‌های pending این ��حصول
                         const totalPending = g.rows.reduce((s, r) => s + (parseInt(r.pending_count) || 0), 0);
                         const pendingBadge = totalPending > 0
                             ? `<span style="background:#ff9800;color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-right:8px;">${totalPending} در صف</span>`
@@ -1391,6 +1485,9 @@ class PIE_StockSync {
                                 <table class="wp-list-table widefat" style="border-collapse:collapse;border:0;margin:0;">
                                     <thead>
                                         <tr style="background:#fafafa;">
+                                            <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;text-align:center;width:30px;">
+                                                <input type="checkbox" class="pie-select-all" title="انتخاب همه" style="cursor:pointer;">
+                                            </th>
                                             <th style="padding:8px 16px;font-size:12px;font-weight:600;color:#555;">متغیر</th>
                                             <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;">سایت ۱ ID</th>
                                             <th style="padding:8px 12px;font-size:12px;font-weight:600;color:#555;">سایت ۲ ID</th>
@@ -1416,6 +1513,9 @@ class PIE_StockSync {
 
                             html += `
                                         <tr style="border-top:1px solid #f0f0f0;" data-map-id="${r.id}">
+                                            <td style="padding:9px 12px;text-align:center;">
+                                                <input type="checkbox" class="pie-map-checkbox" data-map-id="${r.id}" style="cursor:pointer;">
+                                            </td>
                                             <td style="padding:9px 16px;font-size:13px;">${varLabel}</td>
                                             <td style="padding:9px 12px;font-size:12px;color:#555;">${s1Id}</td>
                                             <td style="padding:9px 12px;font-size:12px;color:#555;">${s2Id}</td>
@@ -1553,6 +1653,65 @@ class PIE_StockSync {
                         alert('خطا: ' + res.data);
                     }
                     loadMapTable();
+                });
+            });
+
+            // --- انتخاب / عدم انتخاب تمام checkbox‌های جدول ---
+            $(document).on('change', '.pie-select-all', function() {
+                const isChecked = $(this).is(':checked');
+                const $currentTable = $(this).closest('table');
+                $currentTable.find('.pie-map-checkbox').prop('checked', isChecked);
+                updateBulkDeleteButton();
+            });
+
+            // --- تغییر checkbox‌های جداگانه ---
+            $(document).on('change', '.pie-map-checkbox', function() {
+                const $table = $(this).closest('table');
+                const total = $table.find('.pie-map-checkbox').length;
+                const checked = $table.find('.pie-map-checkbox:checked').length;
+                const $selectAll = $table.find('.pie-select-all');
+                $selectAll.prop('checked', total > 0 && total === checked);
+                updateBulkDeleteButton();
+            });
+
+            // --- بروزرسانی وضعیت دکمه حذف دسته‌جمعی ---
+            function updateBulkDeleteButton() {
+                const checkedCount = $('.pie-map-checkbox:checked').length;
+                if (checkedCount > 0) {
+                    $('#pie-delete-selected-btn').show().text(`حذف ${checkedCount} نگاشت`);
+                } else {
+                    $('#pie-delete-selected-btn').hide();
+                }
+            }
+
+            // --- حذف دسته‌جمعی ---
+            $('#pie-delete-selected-btn').on('click', function() {
+                const checkedIds = [];
+                $('.pie-map-checkbox:checked').each(function() {
+                    checkedIds.push($(this).data('map-id'));
+                });
+                
+                if (checkedIds.length === 0) {
+                    alert('لطفا حداقل یک نگاشت را انتخاب کنید');
+                    return;
+                }
+                
+                if (!confirm(`${checkedIds.length} نگاشت حذف شود؟`)) {
+                    return;
+                }
+                
+                const $btn = $(this).prop('disabled', true).text('در حال حذف...');
+                $.post(ajaxurl, {
+                    action: 'pie_stock_delete_selected_maps',
+                    map_ids: checkedIds,
+                    nonce: nonce
+                }, function(res) {
+                    $btn.prop('disabled', false).text(`حذف ${checkedIds.length} نگاشت`);
+                    if (res.success) {
+                        loadMapTable();
+                    } else {
+                        alert('خطا: ' + res.data);
+                    }
                 });
             });
 
