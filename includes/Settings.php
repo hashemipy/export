@@ -174,45 +174,47 @@ class PIE_Settings {
      * ذخیره تنظیمات از طریق AJAX (برای مطمئن بودن)
      */
     public function ajax_save_settings() {
-        check_ajax_referer('pie_nonce', 'nonce');
-        
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('دسترسی ندارید');
-        }
-        
-        // بررسی نقطه ورود
-        error_log("[PIE DEBUG] POST data received: " . wp_json_encode($_POST));
-        
-        $config = [
-            'site_role' => sanitize_text_field($_POST['site_role'] ?? 'site1'),
-            'remote_site_url' => esc_url_raw($_POST['remote_site_url'] ?? ''),
-            'remote_api_key' => sanitize_text_field($_POST['remote_api_key'] ?? ''),
-            'remote_api_secret' => sanitize_text_field($_POST['remote_api_secret'] ?? ''),
-            'api_consumer_key' => sanitize_text_field($_POST['api_consumer_key'] ?? ''),
-            'api_consumer_secret' => sanitize_text_field($_POST['api_consumer_secret'] ?? ''),
-            'auto_upload' => isset($_POST['auto_upload']) ? 1 : 0,
-            // ✅ مسئله ۲: جهت sync (دوطرفه، یک‌طرفه ۱→۲، یا یک‌طرفه ۲→۱)
-            'sync_direction' => sanitize_text_field($_POST['sync_direction'] ?? 'bidirectional')
-        ];
-        
-        error_log("[PIE DEBUG] Attempting to save with option_key: " . $this->option_key);
-        error_log("[PIE DEBUG] Config array: " . wp_json_encode($config));
-        
-        // سعی کنم مستقیم ذخیره کن
-        $result = update_option($this->option_key, $config);
-        
-        // بررسی نتیجه
-        $saved_config = get_option($this->option_key, []);
-        error_log("[PIE DEBUG] Update result: " . ($result ? 'true' : 'false'));
-        error_log("[PIE DEBUG] Saved config from DB: " . wp_json_encode($saved_config));
-        
-        // اگر ذخیره شده باشد، موفقیت برگردان
-        if (!empty($saved_config)) {
-            error_log("[PIE DEBUG] Settings saved successfully!");
-            wp_send_json_success(['message' => 'تنظیمات ذخیره شدند']);
-        } else {
-            error_log("[PIE DEBUG] Failed to save settings - config is empty");
-            wp_send_json_error('خطا در ذخیره تنظیمات - لطفا دوباره تلاش کنید');
+        try {
+            // بررسی nonce
+            if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'pie_nonce')) {
+                wp_send_json_error('Nonce verification failed');
+                exit;
+            }
+            
+            // بررسی permission
+            if (!current_user_can('manage_woocommerce')) {
+                wp_send_json_error('دسترسی ندارید');
+                exit;
+            }
+            
+            // جمع‌آوری و تمیز کردن داده‌ها
+            $config = [
+                'site_role' => sanitize_text_field($_POST['site_role'] ?? 'site1'),
+                'remote_site_url' => esc_url_raw($_POST['remote_site_url'] ?? ''),
+                'remote_api_key' => sanitize_text_field($_POST['remote_api_key'] ?? ''),
+                'remote_api_secret' => sanitize_text_field($_POST['remote_api_secret'] ?? ''),
+                'api_consumer_key' => sanitize_text_field($_POST['api_consumer_key'] ?? ''),
+                'api_consumer_secret' => sanitize_text_field($_POST['api_consumer_secret'] ?? ''),
+                'auto_upload' => isset($_POST['auto_upload']) ? 1 : 0,
+                // ✅ مسئله ۲: جهت sync (دوطرفه، یک‌طرفه ۱→۲، یا یک‌طرفه ۲→۱)
+                'sync_direction' => sanitize_text_field($_POST['sync_direction'] ?? 'bidirectional')
+            ];
+            
+            // ذخیره سازی
+            update_option($this->option_key, $config);
+            
+            // بررسی ذخیره (fallback)
+            $verify = get_option($this->option_key);
+            if ($verify && isset($verify['site_role'])) {
+                wp_send_json_success([
+                    'message' => 'تنظیمات با موفقیت ذخیره شدند',
+                    'config' => $config
+                ]);
+            } else {
+                wp_send_json_error('خطا در ذخیره سازی');
+            }
+        } catch (Exception $e) {
+            wp_send_json_error('خطای داخلی: ' . $e->getMessage());
         }
     }
     
