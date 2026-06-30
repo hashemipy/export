@@ -60,6 +60,15 @@ class PIE_Transfer {
             wp_send_json_error('هیچ محصولی انتخاب نشده است');
         }
         
+        // مرتب‌سازی محصولات بر اساس SKU (صعودی) تا کوچکترین SKU اول ارسال شود
+        usort($product_ids, function($id_a, $id_b) {
+            $product_a = wc_get_product($id_a);
+            $product_b = wc_get_product($id_b);
+            $sku_a = intval($product_a ? $product_a->get_sku() : 0);
+            $sku_b = intval($product_b ? $product_b->get_sku() : 0);
+            return $sku_a - $sku_b;
+        });
+        
         $success = 0;
         $failed = 0;
         $errors = [];
@@ -528,7 +537,7 @@ class PIE_Transfer {
         $product_key = sanitize_text_field($_POST['product_key'] ?? '');
         
         if (empty($product_key)) {
-            wp_send_json_error('محصول مشخص نشده است');
+            wp_send_json_error('محصول مشخص نشده اس��');
         }
         
         $pending = get_transient('pie_pending_products') ?: [];
