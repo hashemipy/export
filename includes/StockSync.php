@@ -254,7 +254,7 @@ class PIE_StockSync {
         }
 
         // اگر transient sync وجود داشت، این تغییر از خودمان (از طریق update_stock API) آمده
-        // → نباید آن را به سایت مقابل برگردانیم (echo برگشتی)
+        // → نباید آن را به سایت مقابل برگ��دانیم (echo برگشتی)
         // این مطمئن‌ترین روش برای جلوگیری از Ping-Pong است و وابسته به lock نیست
         $product_id = $product->get_parent_id() ?: $product->get_id();
         $sync_key   = 'pie_syncing_' . $product_id;
@@ -298,10 +298,15 @@ class PIE_StockSync {
 
         // ✅ مسئله ۲: بررسی جهت sync - اگر این جهت فعال نیست، skip کن
         $sync_direction = $config['sync_direction'] ?? 'bidirectional';
+        error_log("[PIE SYNC] Config: " . wp_json_encode($config));
+        error_log("[PIE SYNC] Current direction: {$direction}, Sync direction setting: {$sync_direction}");
+        
         if ($sync_direction === 's1_to_s2' && $direction === 's2_to_s1') {
+            error_log("[PIE SYNC] BLOCKED: s1_to_s2 setting but s2_to_s1 direction");
             $this->logging->log('sync', 'debug', "Sync مسدود: تنظیمات فقط یک‌طرفه سایت ۱ → ۲ | {$direction}");
             return;
         } elseif ($sync_direction === 's2_to_s1' && $direction === 's1_to_s2') {
+            error_log("[PIE SYNC] BLOCKED: s2_to_s1 setting but s1_to_s2 direction");
             $this->logging->log('sync', 'debug', "Sync مسدود: تنظیمات فقط یک‌طرفه سایت ۲ → ۱ | {$direction}");
             return;
         }
@@ -1488,7 +1493,7 @@ class PIE_StockSync {
                 loadMapTable();
             });
 
-            // --- دریافت متغیرهای محصول سای�� ۱ ---
+            // --- دریافت متغیرهای محصول ��ای�� ۱ ---
             $('#pie-s1-product').on('change', function() {
                 const pid = $(this).val();
                 const type = $(this).find(':selected').data('type');
