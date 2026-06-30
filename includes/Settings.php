@@ -674,18 +674,22 @@ class PIE_Settings {
                     type: 'POST',
                     url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     data: data,
+                    dataType: 'json',
                     success: function(response) {
                         $('#save-settings-btn').prop('disabled', false).text('💾 ذخیره تنظیمات');
                         if (response.success) {
-                            alert('تنظیمات با موفقیت ذخیره شدند!');
+                            alert('✅ تنظیمات با موفقیت ذخیره شدند!');
                             location.reload();
                         } else {
-                            alert('خطا: ' + response.data);
+                            const errorMsg = (typeof response.data === 'string') ? response.data : 'خطای نامشخص';
+                            alert('❌ خطا: ' + errorMsg);
+                            console.error('[PIE] Save failed:', response);
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
                         $('#save-settings-btn').prop('disabled', false).text('💾 ذخیره تنظیمات');
-                        alert('خطای شبکه');
+                        console.error('[PIE] AJAX Error:', {status, error, response: xhr.responseText});
+                        alert('❌ خطای شبکه: ' + error + '\n\nلطفا F12 را فشار دهید و در Console مشکل را بررسی کنید');
                     }
                 });
             });
