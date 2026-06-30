@@ -479,6 +479,25 @@ class PIE_API {
             return new WP_REST_Response(['success' => false, 'message' => 'product_id و new_stock الزامی هستند'], 400);
         }
 
+        // ✅ مسئله ۲: بررسی جهت sync - اگر این جهت فعال نیست، reject کن
+        $config = $this->settings->get_config();
+        $sync_direction = $config['sync_direction'] ?? 'bidirectional';
+        error_log("[PIE API] update_stock: direction={$direction}, sync_direction={$sync_direction}");
+        
+        if ($sync_direction === 's1_to_s2' && $direction === 's2_to_s1') {
+            error_log("[PIE API] REJECTED: s1_to_s2 setting but s2_to_s1 update received");
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'تنظیمات پلاگین فقط موجودی از سایت ۱ → ۲ را قبول می‌کند'
+            ], 403);
+        } elseif ($sync_direction === 's2_to_s1' && $direction === 's1_to_s2') {
+            error_log("[PIE API] REJECTED: s2_to_s1 setting but s1_to_s2 update received");
+            return new WP_REST_Response([
+                'success' => false,
+                'message' => 'تنظیمات پلاگین فقط موجودی از سایت ۲ → ۱ را قبول می‌کند'
+            ], 403);
+        }
+
         // جلوگیری از Ping-Pong:
         // اگر map قفل است و این درخواست از همان جهتی آمده که ما push کردیم،
         // یعنی echo برگشتی sync خودمان است → نادیده بگیر (200).
