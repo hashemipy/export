@@ -414,6 +414,9 @@ class Product_Import_Export {
                     return;
                 }
                 
+                // مرتب‌سازی IDs به ترتیب صعودی
+                selectedIds.sort((a, b) => parseInt(a) - parseInt(b));
+                
                 $(this).prop('disabled', true);
 
                 const total = selectedIds.length;
@@ -502,6 +505,9 @@ class Product_Import_Export {
                     alert('لطفا حداقل یک محصول را انتخاب کنید');
                     return;
                 }
+                
+                // مرتب‌سازی IDs به ترتیب صعودی
+                selectedIds.sort((a, b) => parseInt(a) - parseInt(b));
                 
                 const format = $('input[name="format"]:checked').val();
                 $('#download-status').text('در حال دانلود...');
@@ -794,6 +800,7 @@ class Product_Import_Export {
         }
         
         $ids_array = array_map('intval', explode(',', $product_ids));
+        sort($ids_array, SORT_NUMERIC);
         $products_data = $this->get_products_for_export($ids_array);
         
         if (empty($products_data)) {
