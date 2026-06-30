@@ -324,7 +324,7 @@ class PIE_Settings {
                                                 echo '</thead>';
                                                 echo '<tbody>';
                                                 foreach ($keys as $key) {
-                                                    $status = $key['active'] ? '✓ فعال' : '✗ غیرفعال';
+                                                    $status = $key['active'] ? '✓ فع��ل' : '✗ غیرفعال';
                                                     $status_color = $key['active'] ? '#4caf50' : '#999';
                                                     $key_preview = substr($key['key'], 0, 15) . '...';
                                                     $date = date('Y-m-d H:i', strtotime($key['created_at']));
@@ -420,18 +420,18 @@ class PIE_Settings {
                                                 <input type="radio" name="<?php echo esc_attr($this->option_key); ?>[sync_direction]" 
                                                        value="s1_to_s2"
                                                        <?php checked($config['sync_direction'] ?? 'bidirectional', 's1_to_s2'); ?>>
-                                                <strong>فقط سایت ۱ → سایت ۲</strong>
+                                                <strong>فقط سایت ۱ ←→ سایت ۲ (یک‌طرفه)</strong>
                                                 <span style="display: block; margin-right: 26px; color: #666; font-size: 12px;">
-                                                    تغییرات موجودی تنها از سایت ۱ به ۲ اعمال می‌شود
+                                                    تغییرات موجودی تنها از سایت ۱ به سایت ۲ اعمال می‌شود
                                                 </span>
                                             </label>
                                             <label style="display: block; margin-bottom: 12px;">
                                                 <input type="radio" name="<?php echo esc_attr($this->option_key); ?>[sync_direction]" 
                                                        value="s2_to_s1"
                                                        <?php checked($config['sync_direction'] ?? 'bidirectional', 's2_to_s1'); ?>>
-                                                <strong>فقط سایت ۲ → سایت ۱</strong>
+                                                <strong>فقط سایت ۲ ←→ سایت ۱ (یک‌طرفه)</strong>
                                                 <span style="display: block; margin-right: 26px; color: #666; font-size: 12px;">
-                                                    تغییرات موجودی تنها از سایت ۲ به ۱ اعمال می‌شود
+                                                    تغییرات موجودی تنها از سایت ۲ به سایت ۱ اعمال می‌شود
                                                 </span>
                                             </label>
                                         </fieldset>
@@ -648,6 +648,8 @@ class PIE_Settings {
                     api_consumer_key: $('[name="pie_site_config[api_consumer_key]"]').val(),
                     api_consumer_secret: $('[name="pie_site_config[api_consumer_secret]"]').val(),
                     auto_upload: $('[name="pie_site_config[auto_upload]"]').is(':checked') ? 1 : 0,
+                    // ✅ مسئله ۲: اضافه کردن sync_direction
+                    sync_direction: $('input[name="pie_site_config[sync_direction]"]:checked').val() || 'bidirectional',
                     nonce: $('[name="pie_nonce"]').val()
                 };
                 
