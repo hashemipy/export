@@ -177,6 +177,9 @@ class PIE_Settings {
             wp_send_json_error('دسترسی ندارید');
         }
         
+        // بررسی نقطه ورود
+        error_log("[PIE DEBUG] POST data received: " . wp_json_encode($_POST));
+        
         $config = [
             'site_role' => sanitize_text_field($_POST['site_role'] ?? 'site1'),
             'remote_site_url' => esc_url_raw($_POST['remote_site_url'] ?? ''),
@@ -189,15 +192,24 @@ class PIE_Settings {
             'sync_direction' => sanitize_text_field($_POST['sync_direction'] ?? 'bidirectional')
         ];
         
+        error_log("[PIE DEBUG] Attempting to save with option_key: " . $this->option_key);
+        error_log("[PIE DEBUG] Config array: " . wp_json_encode($config));
+        
+        // سعی کنم مستقیم ذخیره کن
         $result = update_option($this->option_key, $config);
         
-        error_log("[PIE AJAX] Settings saved directly to database");
-        error_log("[PIE AJAX] Config: " . wp_json_encode($config));
+        // بررسی نتیجه
+        $saved_config = get_option($this->option_key, []);
+        error_log("[PIE DEBUG] Update result: " . ($result ? 'true' : 'false'));
+        error_log("[PIE DEBUG] Saved config from DB: " . wp_json_encode($saved_config));
         
-        if ($result || get_option($this->option_key) == $config) {
+        // اگر ذخیره شده باشد، موفقیت برگردان
+        if (!empty($saved_config)) {
+            error_log("[PIE DEBUG] Settings saved successfully!");
             wp_send_json_success(['message' => 'تنظیمات ذخیره شدند']);
         } else {
-            wp_send_json_error('خطا در ذخیره');
+            error_log("[PIE DEBUG] Failed to save settings - config is empty");
+            wp_send_json_error('خطا در ذخیره تنظیمات - لطفا دوباره تلاش کنید');
         }
     }
     
@@ -324,7 +336,7 @@ class PIE_Settings {
                                                 echo '</thead>';
                                                 echo '<tbody>';
                                                 foreach ($keys as $key) {
-                                                    $status = $key['active'] ? '✓ فع��ل' : '✗ غیرفعال';
+                                                    $status = $key['active'] ? '✓ فع����ل' : '✗ غیرفعال';
                                                     $status_color = $key['active'] ? '#4caf50' : '#999';
                                                     $key_preview = substr($key['key'], 0, 15) . '...';
                                                     $date = date('Y-m-d H:i', strtotime($key['created_at']));
