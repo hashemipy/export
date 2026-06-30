@@ -27,6 +27,9 @@ class PIE_Settings {
         add_action('wp_ajax_pie_delete_api_key', [$this, 'ajax_delete_api_key']);
         add_action('wp_ajax_pie_get_pending_products', [$this, 'ajax_get_pending_products']);
         add_action('wp_ajax_pie_approve_pending_products', [$this, 'ajax_approve_pending_products']);
+        
+        // ✅ اضافه کردن wp_ajax_nopriv برای حالاتی که user logged-in نباشد
+        add_action('wp_ajax_nopriv_pie_save_settings', [$this, 'ajax_save_settings']);
     }
     
     /**
