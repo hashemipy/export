@@ -1136,13 +1136,6 @@ class Product_Import_Export {
 
         $stock_sync = PIE_StockSync::get_instance();
 
-        // مرتب‌سازی محصولات بر اساس SKU (صعودی) تا کوچکترین SKU اول اپلود شود
-        usort($products_json, function($a, $b) {
-            $sku_a = intval($a['sku'] ?? 0);
-            $sku_b = intval($b['sku'] ?? 0);
-            return $sku_a - $sku_b;
-        });
-
         foreach ($products_json as $prod_idx => $product_json) {
             $product_type = $product_json['type'] ?? 'simple';
             $product_name = $product_json['name'] ?? '';
