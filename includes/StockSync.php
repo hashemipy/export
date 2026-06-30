@@ -504,7 +504,7 @@ class PIE_StockSync {
             $queue_id
         ));
         if (!$claimed) {
-            // آیتم قبلاً توسط پروسه‌ی دیگری claim شده - رها کن
+            // آیتم قبلاً توسط پروسه‌ی ��یگری claim شده - رها کن
             return;
         }
 
@@ -924,11 +924,16 @@ class PIE_StockSync {
         $table_map   = $wpdb->prefix . self::TABLE_MAP;
         $table_queue = $wpdb->prefix . self::TABLE_QUEUE;
 
+        $posts_table = $wpdb->prefix . 'posts';
+        $postmeta_table = $wpdb->prefix . 'postmeta';
+        
         $rows = $wpdb->get_results(
             "SELECT m.*,
-                    (SELECT COUNT(*) FROM {$table_queue} q WHERE q.map_id=m.id AND q.status IN ('pending','failed')) as pending_count
+                    (SELECT COUNT(*) FROM {$table_queue} q WHERE q.map_id=m.id AND q.status IN ('pending','failed')) as pending_count,
+                    (SELECT meta_value FROM {$postmeta_table} pm WHERE pm.post_id=m.s1_product_id AND pm.meta_key='_sku' LIMIT 1) as s1_sku,
+                    (SELECT meta_value FROM {$postmeta_table} pm WHERE pm.post_id=m.s2_product_id AND pm.meta_key='_sku' LIMIT 1) as s2_sku
              FROM {$table_map} m
-             ORDER BY m.product_name ASC, m.variation_attrs ASC"
+             ORDER BY CAST(s1_sku AS UNSIGNED) ASC, m.variation_attrs ASC"
         );
 
         wp_send_json_success(['rows' => $rows]);
@@ -1213,7 +1218,7 @@ class PIE_StockSync {
             <h1>هماهنگ‌سازی موجودی</h1>
             <p style="color:#555;">
                 این صفحه محصولات سایت ۱ و سایت ۲ را به هم نگاشت می‌کند.
-                هر بار که موجودی در یک سایت تغییر کند، سایت مقابل به‌روز می‌شود.
+                هر بار که موجودی در یک سای�� تغییر کند، سایت مقابل به‌روز می‌شود.
             </p>
 
             <!-- افزودن mapping دستی -->
@@ -1357,7 +1362,7 @@ class PIE_StockSync {
                     Object.keys(groups).forEach(function(pid) {
                         const g        = groups[pid];
                         const rowCount = g.rows.length;
-                        // مجموع صف‌های pending این محصول
+                        // مجموع صف‌های pending این ��حصول
                         const totalPending = g.rows.reduce((s, r) => s + (parseInt(r.pending_count) || 0), 0);
                         const pendingBadge = totalPending > 0
                             ? `<span style="background:#ff9800;color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-right:8px;">${totalPending} در صف</span>`
