@@ -184,7 +184,9 @@ class PIE_Settings {
             'remote_api_secret' => sanitize_text_field($_POST['remote_api_secret'] ?? ''),
             'api_consumer_key' => sanitize_text_field($_POST['api_consumer_key'] ?? ''),
             'api_consumer_secret' => sanitize_text_field($_POST['api_consumer_secret'] ?? ''),
-            'auto_upload' => isset($_POST['auto_upload']) ? 1 : 0
+            'auto_upload' => isset($_POST['auto_upload']) ? 1 : 0,
+            // ✅ مسئله ۲: جهت sync (دوطرفه، یک‌طرفه ۱→۲، یا یک‌طرفه ۲→۱)
+            'sync_direction' => sanitize_text_field($_POST['sync_direction'] ?? 'bidirectional')
         ];
         
         $result = update_option($this->option_key, $config);
@@ -388,6 +390,53 @@ class PIE_Settings {
                                                placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
                                         <p class="description">
                                             Secret API که از سایت مقابل دریافت کردید
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- ✅ مسئله ۲: جهت sync -->
+                                <tr style="border-top: 2px solid #ddd;">
+                                    <th colspan="2" style="padding: 20px 0 10px;">
+                                        <h3 style="margin: 0;">🔄 تنظیمات هماهنگ‌سازی موجودی</h3>
+                                    </th>
+                                </tr>
+                                
+                                <tr>
+                                    <th scope="row">
+                                        <label for="sync_direction">جهت هماهنگ‌سازی موجودی</label>
+                                    </th>
+                                    <td>
+                                        <fieldset>
+                                            <label style="display: block; margin-bottom: 12px;">
+                                                <input type="radio" name="<?php echo esc_attr($this->option_key); ?>[sync_direction]" 
+                                                       value="bidirectional" 
+                                                       <?php checked($config['sync_direction'] ?? 'bidirectional', 'bidirectional'); ?>>
+                                                <strong>دوطرفه (پیش‌فرض)</strong>
+                                                <span style="display: block; margin-right: 26px; color: #666; font-size: 12px;">
+                                                    موجودی از هر دو سایت به یکدیگر اعمال می‌شود
+                                                </span>
+                                            </label>
+                                            <label style="display: block; margin-bottom: 12px;">
+                                                <input type="radio" name="<?php echo esc_attr($this->option_key); ?>[sync_direction]" 
+                                                       value="s1_to_s2"
+                                                       <?php checked($config['sync_direction'] ?? 'bidirectional', 's1_to_s2'); ?>>
+                                                <strong>فقط سایت ۱ → سایت ۲</strong>
+                                                <span style="display: block; margin-right: 26px; color: #666; font-size: 12px;">
+                                                    تغییرات موجودی تنها از سایت ۱ به ۲ اعمال می‌شود
+                                                </span>
+                                            </label>
+                                            <label style="display: block; margin-bottom: 12px;">
+                                                <input type="radio" name="<?php echo esc_attr($this->option_key); ?>[sync_direction]" 
+                                                       value="s2_to_s1"
+                                                       <?php checked($config['sync_direction'] ?? 'bidirectional', 's2_to_s1'); ?>>
+                                                <strong>فقط سایت ۲ → سایت ۱</strong>
+                                                <span style="display: block; margin-right: 26px; color: #666; font-size: 12px;">
+                                                    تغییرات موجودی تنها از سایت ۲ به ۱ اعمال می‌شود
+                                                </span>
+                                            </label>
+                                        </fieldset>
+                                        <p class="description" style="margin-top: 10px;">
+                                            این تنظیم مشخص می‌کند که موجودی در کدام جهت(ها) هماهنگ شود.
                                         </p>
                                     </td>
                                 </tr>
@@ -700,7 +749,9 @@ class PIE_Settings {
             'remote_api_secret' => '',
             'api_consumer_key' => '',
             'api_consumer_secret' => '',
-            'auto_upload' => 0
+            'auto_upload' => 0,
+            // ✅ مسئله ۲: جهت sync پیش‌فرض
+            'sync_direction' => 'bidirectional'
         ];
         
         $config = get_option($this->option_key, []);

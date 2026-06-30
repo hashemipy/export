@@ -75,6 +75,10 @@ class PIE_StockSync {
         add_action('woocommerce_product_set_stock',   [$this, 'on_stock_changed'], 10, 1);
         add_action('woocommerce_variation_set_stock', [$this, 'on_stock_changed'], 10, 1);
 
+        // ✅ مسئله ۱: hook برای تمام تغییرات موجودی (افزایشی + کاهشی)
+        // این hook وقتی سفارش کنسل شود و موجودی افزایش یابد نیز فراخوانی می‌شود
+        add_action('woocommerce_product_stock_set_value', [$this, 'on_stock_changed'], 10, 1);
+
         // اضافه کردن interval سفارشی ۱۵ دقیقه‌ای
         // باید قبل از wp_schedule_event ثبت شود
         add_filter('cron_schedules', [$this, 'add_cron_interval']);
@@ -289,6 +293,16 @@ class PIE_StockSync {
             $local_var_id     = $product->is_type('variation') ? $product->get_id() : null;
             $map_row = $this->get_map_by_s2($local_product_id, $local_var_id);
         } else {
+            return;
+        }
+
+        // ✅ مسئله ۲: بررسی جهت sync - اگر این جهت فعال نیست، skip کن
+        $sync_direction = $config['sync_direction'] ?? 'bidirectional';
+        if ($sync_direction === 's1_to_s2' && $direction === 's2_to_s1') {
+            $this->logging->log('sync', 'debug', "Sync مسدود: تنظیمات فقط یک‌طرفه سایت ۱ → ۲ | {$direction}");
+            return;
+        } elseif ($sync_direction === 's2_to_s1' && $direction === 's1_to_s2') {
+            $this->logging->log('sync', 'debug', "Sync مسدود: تنظیمات فقط یک‌طرفه سایت ۲ → ۱ | {$direction}");
             return;
         }
 
@@ -813,13 +827,18 @@ class PIE_StockSync {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE_MAP;
         
-        // بررسی وجود قبلی
-        $existing = $this->get_map_by_s1($s1_product_id, $s1_variation_id);
+        // ✅ مسئله ۳: بررسی دقیق - آیا این mapping دقیقاً موجود است؟
+        // استفاده از <=> operator برای null-safe comparison
+        $existing = $wpdb->get_row($wpdb->prepare(
+            "SELECT id FROM {$table} 
+             WHERE s1_product_id = %d AND s2_product_id = %d
+             AND (s1_variation_id <=> %s) AND (s2_variation_id <=> %s)",
+            $s1_product_id, $s2_product_id, $s1_variation_id, $s2_variation_id
+        ));
+        
         if ($existing) {
-            // بروز رسانی s2 IDs (ممکن است محصول دوباره ارسال شده باشد)
+            // Idempotent: بروز رسانی نام/ویژگی فقط (s2 IDs قبلاً درست تنظیم شده‌اند)
             $wpdb->update($table, [
-                's2_product_id'   => $s2_product_id,
-                's2_variation_id' => $s2_variation_id,
                 'product_name'    => $product_name,
                 'variation_attrs' => $variation_attrs,
             ], ['id' => $existing->id]);
@@ -1357,7 +1376,7 @@ class PIE_StockSync {
                     Object.keys(groups).forEach(function(pid) {
                         const g        = groups[pid];
                         const rowCount = g.rows.length;
-                        // مجموع صف‌های pending این محصول
+                        // مجموع صف‌های pending این ��حصول
                         const totalPending = g.rows.reduce((s, r) => s + (parseInt(r.pending_count) || 0), 0);
                         const pendingBadge = totalPending > 0
                             ? `<span style="background:#ff9800;color:#fff;padding:2px 7px;border-radius:10px;font-size:11px;margin-right:8px;">${totalPending} در صف</span>`

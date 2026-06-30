@@ -144,7 +144,9 @@ class PIE_Transfer {
      * و چه از طریق fallback مبتنی بر SKU پیدا شده باشد.
      */
     private function register_pairing_for_product($product, $product_id, $s2_product_id, $s2_variation_ids, $config) {
+        global $wpdb;
         $stock_sync = PIE_StockSync::get_instance();
+        $table_map = $wpdb->prefix . 'pie_stock_map';
 
         // لیست mapping هایی که باید به سایت ۲ هم ارسال شوند
         $mappings_to_push = [];
@@ -175,14 +177,27 @@ class PIE_Transfer {
                         $attrs[] = wc_attribute_label($decoded_attr) . ':' . $decoded_val;
                     }
                     $attr_str = implode('|', $attrs);
-                    $stock_sync->register_mapping(
-                        $product_id,
-                        $s2_product_id,
-                        $s1_var_id,
-                        $s2_var_id,
-                        $product->get_name(),
-                        $attr_str
-                    );
+                    
+                    // ✅ مسئله ۳: بررسی idempotent - آیا این mapping دقیقاً وجود دارد؟
+                    $existing = $wpdb->get_row($wpdb->prepare(
+                        "SELECT id FROM {$table_map}
+                         WHERE s1_product_id = %d AND s2_product_id = %d
+                         AND (s1_variation_id <=> %s) AND (s2_variation_id <=> %s)",
+                        $product_id, $s2_product_id, $s1_var_id, $s2_var_id
+                    ));
+                    
+                    if (!$existing) {
+                        // فقط اگر mapping جدید است، ثبت کن
+                        $stock_sync->register_mapping(
+                            $product_id,
+                            $s2_product_id,
+                            $s1_var_id,
+                            $s2_var_id,
+                            $product->get_name(),
+                            $attr_str
+                        );
+                    }
+                    
                     $mappings_to_push[] = [
                         's1_product_id'   => $product_id,
                         's2_product_id'   => $s2_product_id,
@@ -195,13 +210,25 @@ class PIE_Transfer {
             }
         } else {
             // محصول ساده
-            $stock_sync->register_mapping(
-                $product_id,
-                $s2_product_id,
-                null,
-                null,
-                $product->get_name()
-            );
+            // ✅ مسئله ۳: بررسی idempotent
+            $existing = $wpdb->get_row($wpdb->prepare(
+                "SELECT id FROM {$table_map}
+                 WHERE s1_product_id = %d AND s2_product_id = %d
+                 AND s1_variation_id IS NULL AND s2_variation_id IS NULL",
+                $product_id, $s2_product_id
+            ));
+            
+            if (!$existing) {
+                // فقط اگر mapping جدید است، ثبت کن
+                $stock_sync->register_mapping(
+                    $product_id,
+                    $s2_product_id,
+                    null,
+                    null,
+                    $product->get_name()
+                );
+            }
+            
             $mappings_to_push[] = [
                 's1_product_id'   => $product_id,
                 's2_product_id'   => $s2_product_id,
